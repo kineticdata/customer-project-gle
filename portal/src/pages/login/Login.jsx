@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import clsx from 'clsx';
-import logo from '../../assets/images/logo.svg';
+import logo from '../../assets/images/GLE-Logo.png';
 
 export const LoginCardWrapper = ({ children }) => (
   <div className="flex-cc min-h-screen">

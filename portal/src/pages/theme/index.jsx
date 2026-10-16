@@ -14,7 +14,7 @@ import { PageHeading } from '../../components/PageHeading.jsx';
 import { StatusDot, StatusPill } from '../../components/tickets/StatusPill.jsx';
 import { themeActions } from '../../helpers/state.js';
 import { buildStyleObject, useDefaultTheme } from '../../helpers/theme.js';
-import logo from '../../assets/images/logo.svg';
+import logo from '../../assets/images/GLE-Logo.png';
 import { Menu } from '../../atoms/Menu.jsx';
 import { Portal } from '@ark-ui/react/portal';
 import { Tooltip } from '../../atoms/Tooltip.jsx';

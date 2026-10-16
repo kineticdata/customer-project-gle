@@ -9,7 +9,7 @@ import { createSubmission, getCsrfToken } from '@kineticdata/react';
 import { useSelector } from 'react-redux';
 import { toastSuccess } from '../../helpers/toasts.js';
 import { LoginCardWrapper } from './Login.jsx';
-import logo from '../../assets/images/logo.svg';
+import logo from '../../assets/images/GLE-Logo.png';
 import { Icon } from '../../atoms/Icon.jsx';
 
 export const ResetPassword = () => {
