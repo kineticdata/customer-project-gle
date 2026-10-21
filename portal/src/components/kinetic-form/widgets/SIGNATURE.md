@@ -32,6 +32,10 @@ The Kinetic field object used to store the value of the signature.
 <br>
 <blockquote>
 
+![name=disabled](https://img.shields.io/badge/disabled-gray)
+![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
+Should the signature be read-only. If omitted, this will be set to `true` if the form is in review mode. When `disabled` is `true`, this widget will display the saved signature (or `emptyLabel` if there isn't one) and can't be signed or cleared.
+
 ![name=modalTitle](https://img.shields.io/badge/modalTitle-gray)
 ![type=string](https://img.shields.io/badge/string-e66e22)  
 The title displayed at the top of the signature modal.
@@ -50,19 +54,23 @@ Agreement text displayed below the signature field
 
 ![name=savedButtonLabel](https://img.shields.io/badge/savedButtonLabel-gray)
 ![type=string](https://img.shields.io/badge/string-e66e22)  
-Name of the saved signature file
+Label for the save button in the signature modal
 
 ![name=savedFileName](https://img.shields.io/badge/savedFileName-gray)
 ![type=string](https://img.shields.io/badge/string-e66e22)  
-Label for the button that opens the signature modal
+Name of the saved signature file
 
 ![name=buttonLabel](https://img.shields.io/badge/buttonLabel-gray)
 ![type=string](https://img.shields.io/badge/string-e66e22)  
-Label for the button that clears the signature
+Label for the button that opens the signature modal
 
 ![name=clearButtonLabel](https://img.shields.io/badge/clearButtonLabel-gray)
 ![type=string](https://img.shields.io/badge/string-e66e22)  
 Label for the button that clears the signature
+
+![name=emptyLabel](https://img.shields.io/badge/emptyLabel-gray)
+![type=string](https://img.shields.io/badge/string-e66e22)  
+Text displayed when the widget is disabled and there is no signature
 
 </blockquote>
 </details>
@@ -80,6 +88,14 @@ Retrieves the current value of the signature.
 ![name=reset](https://img.shields.io/badge/reset%28%29-gray)
 ![type=Function](https://img.shields.io/badge/Function-e66e22)  
 Resets the signature field, clearing the stored signature.
+
+![name=enable](https://img.shields.io/badge/enable%28%29-gray)
+![type=Function](https://img.shields.io/badge/Function-e66e22)  
+Enables the widget so the user can sign or clear the signature.
+
+![name=disable](https://img.shields.io/badge/disable%28%29-gray)
+![type=Function](https://img.shields.io/badge/Function-e66e22)  
+Disables the widget, and displays the saved signature as read-only.
 
 ### Example
 

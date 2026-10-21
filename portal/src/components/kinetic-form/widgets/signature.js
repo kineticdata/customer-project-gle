@@ -24,6 +24,7 @@ const SignatureComponent = forwardRef(
   (
     {
       field,
+      disabled,
       modalTitle = 'Sign your form',
       signaturePadLabel = 'Signature',
       fullNameLabel = 'Full Name',
@@ -32,10 +33,15 @@ const SignatureComponent = forwardRef(
       savedFileName = 'signature_widget',
       buttonLabel = 'Signature',
       clearButtonLabel = 'Clear',
+      emptyLabel = 'Not signed',
     },
     ref,
   ) => {
     const canvasRef = useRef(null);
+    // State for disabled state of the widget
+    const [isDisabled, setIsDisabled] = useState(
+      disabled ?? field.form().reviewMode(),
+    );
     const profile = useSelector(state => state.app.profile);
     const [open, setOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('draw');
@@ -150,7 +156,12 @@ const SignatureComponent = forwardRef(
       (activeTab === 'type' && (!selectedStyle || !fullName));
 
     // Define API ref
-    const api = useRef({ getValue, reset });
+    const api = useRef({
+      enable: () => setIsDisabled(false),
+      disable: () => setIsDisabled(true),
+      getValue,
+      reset,
+    });
     // Update API ref when its contents change
     useEffect(() => {
       Object.assign(api.current, { getValue, reset });
@@ -159,24 +170,39 @@ const SignatureComponent = forwardRef(
     return (
       <WidgetAPI ref={ref} api={api.current}>
         <div className="flex-sc w-full gap-3">
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="w-60 sm:w-68 h-14 kbtn kbtn-outline text-base border-base-300 hover:bg-base-200"
-          >
-            {savedSignature ? (
-              <img
-                src={savedSignature}
-                alt="signature"
-                className="max-h-full max-w-full object-contain rounded-box"
-              />
-            ) : (
-              <span className="flex-cc gap-2">
-                {buttonLabel} <Icon name="writing" aria-label="signature" />
-              </span>
-            )}
-          </button>
-          {savedSignature && (
+          {isDisabled ? (
+            // Read-only view of the saved signature, with no way to change it
+            <div className="w-60 sm:w-68 h-14 flex-cc p-1 border border-base-300 rounded-box">
+              {savedSignature ? (
+                <img
+                  src={savedSignature}
+                  alt="signature"
+                  className="max-h-full max-w-full object-contain rounded-box"
+                />
+              ) : (
+                <span className="text-base-content/60">{emptyLabel}</span>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="w-60 sm:w-68 h-14 kbtn kbtn-outline text-base border-base-300 hover:bg-base-200"
+            >
+              {savedSignature ? (
+                <img
+                  src={savedSignature}
+                  alt="signature"
+                  className="max-h-full max-w-full object-contain rounded-box"
+                />
+              ) : (
+                <span className="flex-cc gap-2">
+                  {buttonLabel} <Icon name="writing" aria-label="signature" />
+                </span>
+              )}
+            </button>
+          )}
+          {savedSignature && !isDisabled && (
             <button
               type="button"
               className="kbtn kbtn-ghost rounded-full"
@@ -188,7 +214,7 @@ const SignatureComponent = forwardRef(
         </div>
         <Modal
           title={modalTitle}
-          open={open}
+          open={open && !isDisabled}
           onOpenChange={({ open }) => setOpen(open)}
           onExitComplete={onExitComplete}
           size="sm"
@@ -318,6 +344,7 @@ const SignatureComponent = forwardRef(
 
 SignatureComponent.propTypes = {
   field: t.object.isRequired,
+  disabled: t.bool,
   modalTitle: t.string,
   signaturePadLabel: t.string,
   fullNameLabel: t.string,
@@ -325,6 +352,7 @@ SignatureComponent.propTypes = {
   savedButtonLabel: t.string,
   savedFileName: t.string,
   clearButtonLabel: t.string,
+  emptyLabel: t.string,
 };
 
 const SignatureProvider = forwardRef((props, ref) => (
@@ -363,6 +391,8 @@ export const Signature = ({ container, field, config, id } = {}) => {
 
 /**
  * @typedef {Object} SignatureWidgetConfig
+ * @property {boolean} [disabled] Should the signature be read-only.
+ *  If omitted, will use the reviewMode of the form to determine.
  * @property {string} [modalTitle] The title displayed at the top of the modal.
  * @property {string} [signaturePadLabel] The label displayed above the signature pad.
  * @property {string} [fullNameLabel] The label displayed above the signature type styles.
@@ -371,4 +401,5 @@ export const Signature = ({ container, field, config, id } = {}) => {
  * @property {string} [savedFileName] The name of the file saved after the signature is completed.
  * @property {string} [buttonLabel] The label for the signature field.
  * @property {string} [clearButtonLabel] The label for the "Clear" button next to the signature field.
+ * @property {string} [emptyLabel] The text displayed when the widget is disabled and there is no signature.
  */
