@@ -1,25 +1,34 @@
-# This workflow runs commit to the main branch in the repository.
-# 
+# This workflow runs on commits to protected branches (main and any epic/**
+# branch) when files under portal/ change.
+#
 # This workflow will:
 # - Verify the required variables and secrets are set in this GitHub Repository
 # - Install node
 # - Install the dependencies for the portal
 # - Verify Snyk code scans pass (this is required)
-# - Publish the built portal into an S3 bucket
+# - Publish the built portal into an S3 bucket under branches/<branch-name>/
 #
 # This workflow requires the following variables set in this repository's settings:
 # S3_BUCKET                 -> The S3 bucket to publish the portal to
 # SOURCE_DIRECTORY          -> The source directory for the portal within this repository
 # SNYK_AUTH                 -> A token to authenticate to Snyk for scans
-# 
+#
 # The final S3 bucket location will be:
-# s3://S3_BUCKET/portals/REPOSITORY_NAME/versions/latest/
-name: Momentum Portal Publish (Main Commits)
+# s3://S3_BUCKET/portals/REPOSITORY_NAME/branches/GITHUB_REF_NAME/
+#
+# Examples:
+# - main                  -> s3://.../branches/main/
+# - epic/spring-boot      -> s3://.../branches/epic/spring-boot/
+#
+# Versioned destinations (versions/MAJOR.MINOR.PATCH/, versions/MAJOR.MINOR.x/,
+# versions/MAJOR.x.x/) are produced only by tag pushes via portal-tag-push.yaml.
+name: Momentum Portal Publish (Protected Branches)
 
 on:
   push:
     branches:
-      - 'main'
+      - main
+      - 'epic/**'
     paths:
       - 'portal/**'
 
@@ -79,7 +88,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
 
       # Install dependencies
       - name: Run Yarn Install
@@ -99,11 +108,14 @@ jobs:
         with:
           args: ${{ vars.SOURCE_DIRECTORY }}/ --severity-threshold=critical
 
-      # Copy our built portal to the S3 bucket
+      # Copy our built portal to the S3 bucket under branches/<ref_name>/.
+      # github.ref_name preserves slashes, so 'epic/spring-boot' produces
+      # 'branches/epic/spring-boot/' as a nested S3 prefix.
       - name: Deploy to S3
         working-directory: ${{ vars.SOURCE_DIRECTORY }}
+        env:
+          BASE: s3://${{ vars.S3_BUCKET }}/portals/${{ steps.repo_name.outputs.REPO_NAME }}/branches
+          REF_NAME: ${{ github.ref_name }}
+          SYNC_OPTS: --cache-control=must-revalidate,max-age:0 --delete
         run: |
-          aws s3 sync \
-          ./build \
-          s3://${{ vars.S3_BUCKET }}/portals/${{ steps.repo_name.outputs.REPO_NAME }}/versions/latest/ \
-          --cache-control=\"must-revalidate,max-age:0\" --delete
+          aws s3 sync ./build "$BASE/$REF_NAME/" $SYNC_OPTS

@@ -1,4 +1,5 @@
 import { formatDistance } from 'date-fns';
+import { logout } from '@kineticdata/react';
 
 /******************************************************************************
  * General helper functions
@@ -135,3 +136,18 @@ export const downloadBlob = (blob, filename, extension) => {
   window.URL.revokeObjectURL(a.href);
   document.body.removeChild(a);
 };
+
+/**
+ * Signs the user out. The library follows the space meta's `session.logoutUrl`
+ * when the sign in has one (SAML2, or OpenID Connect with single logout), which
+ * navigates the page to the identity provider and back to the space. Otherwise
+ * it ends the session with `/app/logout`, and the bundle is reloaded at its
+ * home route so the login screen starts from a clean state, as the plain
+ * `/app/logout` link did. The reload stays on the current document rather than
+ * navigating to a URL built from the location.
+ */
+export const signOut = () =>
+  logout(() => {
+    window.location.hash = '/';
+    window.location.reload();
+  });

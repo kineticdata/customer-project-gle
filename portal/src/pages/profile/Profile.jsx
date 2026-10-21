@@ -1,17 +1,29 @@
 import { useSelector } from 'react-redux';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import clsx from 'clsx';
-import { updateProfile } from '@kineticdata/react';
+import { fetchPasswordPolicy, updateProfile } from '@kineticdata/react';
 import { Avatar } from '../../atoms/Avatar.jsx';
 import { Icon } from '../../atoms/Icon.jsx';
-import { validateEmail } from '../../helpers/index.js';
+import { signOut, validateEmail } from '../../helpers/index.js';
 import { appActions } from '../../helpers/state.js';
 import { toastError, toastSuccess } from '../../helpers/toasts.js';
 import { PageHeading } from '../../components/PageHeading.jsx';
+import { PasswordRequirements } from '../../components/password/PasswordRequirements.jsx';
 
 export const Profile = () => {
   const { profile } = useSelector(state => state.app);
   const [newPassword, setNewPassword] = useState('');
+  // Required by some spaces to change the password (the server decides)
+  const [currentPassword, setCurrentPassword] = useState('');
+  // The rules the server refused the new password for ({ rule, message })
+  const [ruleErrors, setRuleErrors] = useState([]);
+  // The space's password policy, for the requirements checklist
+  const [policy, setPolicy] = useState(null);
+  useEffect(() => {
+    fetchPasswordPolicy().then(({ passwordPolicy }) =>
+      setPolicy(passwordPolicy || null),
+    );
+  }, []);
   const [showPassword, setShowPassword] = useState(false);
   const [showChangedPassword, setShowChangedPassword] = useState(false);
   const [newEmail, setNewEmail] = useState(profile.email);
@@ -51,14 +63,26 @@ export const Profile = () => {
       let newProfileData = { displayName: newDisplayName, email: newEmail };
       if (showChangedPassword && newPassword.length > 0) {
         newProfileData.password = newPassword;
+        if (currentPassword.length > 0) {
+          newProfileData.currentPassword = currentPassword;
+        }
       }
 
+      setRuleErrors([]);
       updateProfile({
         profile: newProfileData,
       }).then(({ error, profile }) => {
         if (!error) {
           toastSuccess({ title: 'Your profile has been updated.' });
           appActions.updateProfile(profile);
+          // Not kept for a later change in the same visit
+          setCurrentPassword('');
+        } else if (
+          Array.isArray(error.errors) &&
+          error.errors.some(e => e.rule)
+        ) {
+          // The new password breaks the space's password policy: show each rule under it.
+          setRuleErrors(error.errors.filter(e => e.rule));
         } else {
           toastError({
             title: 'Profile update failed.',
@@ -67,7 +91,13 @@ export const Profile = () => {
         }
       });
     },
-    [newPassword, newDisplayName, showChangedPassword, newEmail],
+    [
+      newPassword,
+      currentPassword,
+      newDisplayName,
+      showChangedPassword,
+      newEmail,
+    ],
   );
 
   return (
@@ -122,9 +152,26 @@ export const Profile = () => {
               )}
             </div>
             {showChangedPassword && (
+              <div className="field">
+                <label htmlFor="currentPassword">Current Password</label>
+                <input
+                  id="currentPassword"
+                  type={showPassword ? 'text' : 'password'}
+                  name="currentPassword"
+                  autoComplete="current-password"
+                  value={currentPassword}
+                  onChange={e => setCurrentPassword(e.target.value)}
+                />
+                <p className="text-base-content/60">
+                  Required by some spaces to change your password.
+                </p>
+              </div>
+            )}
+            {showChangedPassword && (
               <div
                 className={clsx('field required', {
-                  'has-error': validationErrors.newPassword,
+                  'has-error':
+                    validationErrors.newPassword || ruleErrors.length > 0,
                 })}
               >
                 <label htmlFor="password">Password</label>
@@ -133,6 +180,7 @@ export const Profile = () => {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     name="password"
+                    autoComplete="new-password"
                     required={true}
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
@@ -153,12 +201,32 @@ export const Profile = () => {
                     {validationErrors.newPassword}
                   </p>
                 )}
+                {ruleErrors.map(e => (
+                  <p
+                    key={e.rule}
+                    className="flex-sc gap-2 text-base-content/60"
+                    role="alert"
+                  >
+                    <span className="kstatus kstatus-error"></span>
+                    {e.message}
+                  </p>
+                ))}
+                <PasswordRequirements
+                  policy={policy}
+                  password={newPassword}
+                  user={{ username: profile.username, email: newEmail }}
+                  changingOwnPassword
+                />
               </div>
             )}
             <button
               type="button"
               className="kbtn kbtn-ghost kbtn-xs self-end -mt-3"
-              onClick={() => setShowChangedPassword(!showChangedPassword)}
+              onClick={() => {
+                // Cancelling the change also forgets the current password
+                if (showChangedPassword) setCurrentPassword('');
+                setShowChangedPassword(!showChangedPassword);
+              }}
             >
               {showChangedPassword === false ? 'Change Password' : 'Cancel'}
             </button>
@@ -178,13 +246,14 @@ export const Profile = () => {
           </form>
           <hr />
           <div className="flex-c-st gap-6 w-full">
-            <a
-              href="/app/logout"
+            <button
+              type="button"
+              onClick={signOut}
               className="kbtn kbtn-ghost kbtn-lg text-base text-base-content/80 w-70 self-center mt-6"
             >
               <Icon name="logout" />
               <span>Log Out</span>
-            </a>
+            </button>
           </div>
         </div>
       </div>

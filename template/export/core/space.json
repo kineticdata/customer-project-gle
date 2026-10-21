@@ -21,7 +21,7 @@
   "defaultLocale": "en",
   "defaultTimezone": "America/Detroit",
   "displayType": "Custom",
-  "displayValue": "https://s3.amazonaws.com/kinetic-portals/portals/momentum-portal/versions/latest/index.html",
+  "displayValue": "https://s3.amazonaws.com/kinetic-portals/portals/momentum-portal/versions/6.x.x/index.html",
   "enabledLocales": [
     "en"
   ],

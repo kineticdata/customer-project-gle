@@ -102,17 +102,25 @@ See the [Kinetic Data Documentation Library](https://docs.kineticdata.com/) for 
 
 ## Portal S3 Deployment
 
-The Momentum Portal code can be found in an S3 bucket. The base URL for the S3 bucket is: `https://s3.amazonaws.com/kinetic-portals/portals/momentum-portal/versions/`
+The Momentum Portal code is published to an S3 bucket. The base URL is: `https://s3.amazonaws.com/kinetic-portals/portals/momentum-portal/`
 
-There are versioned directories in S3 that correspond to specific Github Workflow actions that trigger based on events that take place in the repository. The workflow files can be found [here](../.github/workflows/).
+Publishes are split into two channels so consumers can choose how aggressively they pick up changes:
 
-| Github Event          | Version Directory | Github Action Workflow File | Example Usage                                  |
-| --------------------- | ----------------- | --------------------------- | ---------------------------------------------- |
-| Tag Push              | vXX.YY.ZZ         | portal-tag-push.yaml        | Releasing a tagged version.                    |
-| Commit to Main Branch | latest            | portal-main-commits.yaml    | Testing latest commits to main.                |
-| Run Dispatch Workflow | YYYYMMDD-abcd1234 | portal-build-dispatch.yaml  | Testing code on a particular branch or commit. |
+- **`versions/`** — produced by tag pushes. A real release tag (e.g. `v6.1.8`) fans out to three destinations so a space can pin to whichever granularity it wants: the exact version, the minor line, or the major line. Pre-release tags (e.g. `v6.1.8-rc2`) publish **only** to their exact-version destination so they cannot bump a major or minor line that production spaces follow.
+- **`branches/`** — produced by commits to protected branches (`main` and any `epic/**` branch). A branch tip is meant for development/QA spaces, not production.
 
-Example: merging a PR (which causes a commit in the `main` branch) would result in the portal path of `https://s3.amazonaws.com/kinetic-portals/portals/momentum-portal/versions/latest/`
+| Github Event                | Destination Directory                                                                   | Github Action Workflow File   | Example Usage                                  |
+| --------------------------- | --------------------------------------------------------------------------------------- | ----------------------------- | ---------------------------------------------- |
+| Tag Push (release)          | `versions/XX.YY.ZZ/` **and** `versions/XX.YY.x/` **and** `versions/XX.x.x/`             | portal-tag-push.yaml          | Releasing a tagged version.                    |
+| Tag Push (pre-release)      | `versions/XX.YY.ZZ-suffix/` (exact only — does not bump the minor or major lines)       | portal-tag-push.yaml          | Publishing a release candidate or build tag.   |
+| Commit to Protected Branch  | `branches/<branch-name>/` (e.g. `branches/main/`, `branches/epic/spring-boot/`)         | portal-branch-push.yaml       | Testing the tip of `main` or an epic branch.   |
+| Run Dispatch Workflow       | `versions/YYYYMMDD-abcd1234/`                                                           | portal-build-dispatch.yaml    | Testing code on a particular branch or commit. |
+
+Example URLs for the different channels:
+
+- Branch tip (bleeding edge): `https://s3.amazonaws.com/kinetic-portals/portals/momentum-portal/branches/main/`
+- Major line (stable, recommended for production): `https://s3.amazonaws.com/kinetic-portals/portals/momentum-portal/versions/6.x.x/`
+- Pinned release: `https://s3.amazonaws.com/kinetic-portals/portals/momentum-portal/versions/6.1.8/`
 
 You can also view the output to determine the S3 bucket by viewing the Github Action workflow run.
 

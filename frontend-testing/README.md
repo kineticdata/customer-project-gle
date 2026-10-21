@@ -34,6 +34,18 @@ PW_PASSWORD=password
 
 **Important:** The `.env` file is gitignored. Never commit credentials to version control.
 
+### Password policy and banner tests (Kinetic Platform 7.0)
+
+`passwordChange`, `passwordChangeTimeout`, `resetPassword`, `loginBanner` and `environmentBanner` need a Kinetic Platform 7.0 space. They create (and delete) test users and temporarily change the space's login banner, Environment Banner and minimum password length, restoring them afterwards, as the space admin in `PW_USERNAME` / `PW_PASSWORD`.
+
+They are skipped unless you allow that:
+
+```env
+PW_SPACE_CHANGES_ALLOWED=true
+```
+
+Only set it for a space where such changes are acceptable, never for a shared environment.
+
 ## Running Tests
 
 ### Run All Tests

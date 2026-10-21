@@ -15,11 +15,14 @@ import { PublicRoutes } from './pages/PublicRoutes.jsx';
 import { Login } from './pages/login/Login.jsx';
 import { ConfirmationModal } from './components/confirm/ConfirmationModal.jsx';
 import { useData } from './helpers/hooks/useData.js';
+import { EnvironmentBanners } from './components/banners/EnvironmentBanners.jsx';
+import { PreviousSignIn } from './components/banners/PreviousSignIn.jsx';
 
 export const App = ({
   initialized,
   loggedIn,
   loginProps,
+  previousSignIn,
   timedOut,
   serverError,
 }) => {
@@ -68,9 +71,17 @@ export const App = ({
   // Set the space data into redux
   useEffect(() => {
     if (spaceInit && !spaceLoading) {
-      appActions.setSpace(spaceData);
+      // When logged out, the space is fetched publicly and returns 401 for spaces without
+      // an anonymous-access form. That 401 is expected and must not block the login screen,
+      // so we ignore it. Any other failure (e.g. a 500) - or any failure once logged in - is
+      // recorded normally so genuine errors still surface as an error screen.
+      const isExpectedPublic401 =
+        !loggedIn && spaceData?.error?.statusCode === 401;
+      if (!isExpectedPublic401) {
+        appActions.setSpace(spaceData);
+      }
     }
-  }, [spaceInit, spaceLoading, spaceData]);
+  }, [spaceInit, spaceLoading, spaceData, loggedIn]);
 
   // Fetch profile data once the user is logged in
   const profileParams = useMemo(
@@ -128,8 +139,14 @@ export const App = ({
   return (
     <>
       <div className="flex-c-st flex-auto overflow-auto">
+        {/* The space's environment banner, above the header area */}
+        <EnvironmentBanners />
+
         {/* Header element where we will render headers via a portal */}
         <header id="app-header" className="flex-none" />
+
+        {/* After a username and password sign in, when the space shows it */}
+        {loggedIn && <PreviousSignIn previousSignIn={previousSignIn} />}
 
         <main
           id="app-main"
@@ -137,18 +154,24 @@ export const App = ({
             'flex-auto relative overflow-y-auto overflow-x-hidden scrollbar',
           )}
         >
-          {serverError || error ? (
-            // If an error occurred during auth or fetching app data, show an
-            // error screen
-            <Error error={serverError || error} header={true} />
-          ) : !initialized || !space ? (
-            // If auth isn't initialized or space record isn't fetched, show a
-            // loading screen
+          {!initialized ? (
+            // Wait for authentication to initialize before deciding what to render
             <Loading />
+          ) : serverError || error ? (
+            // A genuine error occurred during auth or while loading app data, show an
+            // error screen. An expected public-space 401 while logged out is filtered out
+            // before it reaches redux (see the setSpace effect above), so it never lands
+            // here and therefore does not block the login screen; a 500 or other failure
+            // still does.
+            <Error error={serverError || error} header={true} />
           ) : !loggedIn ? (
-            // If the user is not logged in, render the public routes, which
-            // will default to rendering the login page for all unmatched routes
+            // If the user is not logged in, render the public routes, which will default
+            // to rendering the login page for all unmatched routes. This does not depend
+            // on the space fetch.
             <PublicRoutes loginProps={loginProps} />
+          ) : !space ? (
+            // Logged in and waiting on the space record, show a loading screen
+            <Loading />
           ) : kapp && profile ? (
             // If the user is logged in and kapp and profile data has been
             // fetched, render the private routes, and render the Login
@@ -157,6 +180,8 @@ export const App = ({
               <PrivateRoutes />
               {timedOut && (
                 <dialog open>
+                  {/* The dialog covers the page, so it shows the banner itself */}
+                  <EnvironmentBanners />
                   <Login {...loginProps} />
                 </dialog>
               )}
@@ -171,6 +196,10 @@ export const App = ({
 
         {/* Footer element where we will render footers via a portal */}
         <footer id="app-footer" />
+
+        {/* The space's environment banner, below the footer area (only when the space places
+            it at the top and bottom) */}
+        <EnvironmentBanners placement="bottom" />
       </div>
 
       {/* Panels element where we will render panels via a portal */}
@@ -186,6 +215,7 @@ App.propTypes = {
   initialized: t.bool,
   loggedIn: t.bool,
   loginProps: t.object,
+  previousSignIn: t.object,
   timedOut: t.bool,
   serverError: t.object,
 };

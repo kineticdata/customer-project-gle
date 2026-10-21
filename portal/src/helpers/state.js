@@ -44,6 +44,9 @@ export const appActions = regRedux(
     setSpace(state, { error, space }) {
       if (error) state.error = error;
       else {
+        // Clear any prior error (e.g. an expected public-fetch 401 while logged out) now
+        // that we have a successful space response.
+        state.error = null;
         state.space = space;
         state.kappSlug = getAttributeValue(
           space,

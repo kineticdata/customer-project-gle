@@ -1,4 +1,4 @@
 source 'https://rubygems.org'
 
-gem 'kinetic_sdk', '5.0.29'
+gem 'kinetic_sdk', '7.0.0.rc5'
 gem 'deep_merge', '~> 1.2.1'

@@ -1,16 +1,22 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Link,
   useNavigate,
   useParams,
   useSearchParams,
 } from 'react-router-dom';
-import { createSubmission, getCsrfToken } from '@kineticdata/react';
+import {
+  createSubmission,
+  fetchPasswordPolicy,
+  getCsrfToken,
+  resetPassword,
+} from '@kineticdata/react';
 import { useSelector } from 'react-redux';
 import { toastSuccess } from '../../helpers/toasts.js';
 import { LoginCardWrapper } from './Login.jsx';
 import logo from '../../assets/images/GLE-Logo.png';
 import { Icon } from '../../atoms/Icon.jsx';
+import { PasswordRequirements } from '../../components/password/PasswordRequirements.jsx';
 
 export const ResetPassword = () => {
   let { token } = useParams();
@@ -119,7 +125,17 @@ const ResetPasswordChangeForm = ({ token, username }) => {
   const navigate = useNavigate();
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
+  // The rules the server refused the password for ({ rule, message })
+  const [ruleErrors, setRuleErrors] = useState([]);
   const themeLogo = useSelector(state => state.theme.data?.logo?.default);
+
+  // The space's password policy, for the requirements checklist
+  const [policy, setPolicy] = useState(null);
+  useEffect(() => {
+    fetchPasswordPolicy().then(({ passwordPolicy }) =>
+      setPolicy(passwordPolicy || null),
+    );
+  }, []);
 
   // State and change handlers for new password fields
   const [password, setPassword] = useState('');
@@ -153,29 +169,35 @@ const ResetPasswordChangeForm = ({ token, username }) => {
     async e => {
       e.preventDefault();
       setSubmitted(true);
-      const response = await fetch(`/app/reset-password/token`, {
-        method: 'POST',
-        body: new URLSearchParams({
-          username,
-          password,
-          confirmPassword,
-          token,
-        }),
-        headers: { 'X-XSRF-TOKEN': getCsrfToken() },
+      setError(null);
+      setRuleErrors([]);
+      const { error, loginRequired } = await resetPassword({
+        username,
+        token,
+        password,
+        confirmPassword,
+        csrfToken: getCsrfToken(),
       });
 
-      if (response.status === 302 || (response.ok && response.redirected)) {
+      if (!error) {
         navigate('/', { state: { persistToasts: true } });
-        toastSuccess({ title: 'Password was successfully updated.' });
+        toastSuccess({
+          title: 'Password was successfully updated.',
+          // When the space requires its login banner to be acknowledged, the reset doesn't sign
+          // the user in: they sign in with the new password, where the banner is shown.
+          description: loginRequired
+            ? 'Sign in with your new password.'
+            : undefined,
+        });
+      } else if (Array.isArray(error.errors) && error.errors.length > 0) {
+        // The password breaks the space's password policy: show each rule, and let them try again.
+        setRuleErrors(error.errors);
+        setSubmitted(false);
       } else {
-        try {
-          const json = await response.json();
-          if (json.error) setError(json.error);
-        } catch {
-          setError(
+        setError(
+          error.message ||
             'There was a problem resetting your password! Please note that password reset links may only be used once.',
-          );
-        }
+        );
       }
     },
     [navigate, username, password, confirmPassword, token],
@@ -209,6 +231,7 @@ const ResetPasswordChangeForm = ({ token, username }) => {
               id="password"
               type="password"
               name="password"
+              autoComplete="new-password"
               required={true}
               disabled={submitted}
               value={password}
@@ -222,6 +245,7 @@ const ResetPasswordChangeForm = ({ token, username }) => {
               id="passwordConfirmation"
               type="password"
               name="passwordConfirmation"
+              autoComplete="new-password"
               required={true}
               disabled={submitted}
               value={confirmPassword}
@@ -229,6 +253,23 @@ const ResetPasswordChangeForm = ({ token, username }) => {
               onBlur={onBlurPasswordField}
             />
           </div>
+          {/* The user sets their own password here, so it must also differ from the current one */}
+          <PasswordRequirements
+            policy={policy}
+            password={password}
+            user={{ username }}
+            changingOwnPassword
+          />
+          {ruleErrors.length > 0 && (
+            <ul className="flex-c-st gap-1" role="alert">
+              {ruleErrors.map(e => (
+                <li key={e.rule} className="flex-sc gap-2 text-base-content/80">
+                  <span className="kstatus kstatus-error"></span>
+                  {e.message}
+                </li>
+              ))}
+            </ul>
+          )}
           {passwordMismatch && (
             <p className="flex-sc gap-2 text-base-content/80">
               <span className="kstatus kstatus-error"></span>
