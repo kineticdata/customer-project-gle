@@ -1,0 +1,10 @@
+{
+  "method": "GET",
+  "securityPolicies": [
+    {
+      "endpoint": "Execution",
+      "name": "Authenticated Users"
+    }
+  ],
+  "slug": "business-calendar"
+}

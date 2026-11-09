@@ -12,6 +12,12 @@
     "type": "Kapp"
   },
   {
+    "message": "Must be a space admin or a member of the Human Resources team.",
+    "name": "Business Calendar Admins",
+    "rule": "identity('spaceAdmin') || (identity('teams') || []).indexOf('Human Resources') !== -1",
+    "type": "Kapp"
+  },
+  {
     "message": "Everyone is allowed access.",
     "name": "Everyone",
     "rule": "true",

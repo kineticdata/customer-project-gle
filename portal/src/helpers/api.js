@@ -37,3 +37,31 @@ export const executeIntegration = ({
   )
     .then(handleResponse)
     .catch(handleError);
+
+/**
+ * Calls the business-calendar WebAPI, which runs the same "Business Calendar
+ * Calculate" routine that workflows use, so the portal never does its own
+ * business-day math.
+ *
+ * @param {string} kappSlug
+ * @param {Object} params Query parameters: op (add_duration, is_business_day,
+ *  next_business_day, previous_business_day, business_days_between,
+ *  business_hours_between, is_business_time or next_business_opening),
+ *  calendar (submission id; blank uses the default), from / date / start, end,
+ *  amount, unit (business_days, calendar_days, weeks or business_hours),
+ *  direction, adjust and time.
+ * @returns {Promise<Object>} The result ({ operation, calendar, result,
+ *  warnings }) or { error: { message, key } }.
+ */
+export const businessCalendar = (kappSlug, params) =>
+  fetch(
+    `${bundle.spaceLocation()}/app/kapps/${kappSlug}/webApis/business-calendar?${new URLSearchParams(
+      { timeout: '10', ...params },
+    )}`,
+  )
+    .then(handleResponse)
+    .catch(error =>
+      error?.error?.code
+        ? { error: { message: error.error.message, key: error.error.code } }
+        : handleError(error),
+    );

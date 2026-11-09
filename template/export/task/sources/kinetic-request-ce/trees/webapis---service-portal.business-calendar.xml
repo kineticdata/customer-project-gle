@@ -1,0 +1,123 @@
+<tree schema_version="1.0">
+    <sourceName>Kinetic Request CE</sourceName>
+    <sourceGroup>WebApis > service-portal</sourceGroup>
+    <type>Tree</type>
+    <status>Active</status>
+    <taskTree builder_version="" schema_version="1.0" version="">
+        <name>business-calendar</name>
+        <author></author>
+        <notes></notes>
+        <lastID>3</lastID>
+        <request>
+            <task definition_id="system_start_v1" id="start" name="Start" x="10" y="10">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>false</visible>
+                <parameters></parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="parse query" type="Complete" value="">utilities_echo_v1_1</task>
+                </dependents>
+            </task>
+            <task definition_id="utilities_echo_v1" id="utilities_echo_v1_1" name="Parse Request" x="262" y="13">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="input" label="Input" menu="" required="true" tooltip="">&lt;%=
+# ---------------------------------------------------------------------------
+# Generated from template/tooling/business-calendar/request_params.rb by build_trees.rb.
+# Edit that file and rebuild rather than editing this node by hand.
+#
+# The module name ends in a hash of the source so a new version never clashes
+# with an older one still loaded in the engine. It is defined once per engine
+# (defined? is a plain lookup because the engine may evaluate this ERB inside
+# a class).
+# ---------------------------------------------------------------------------
+unless defined?(BizCalParams_31dca4764d)
+  # Maps the business-calendar WebAPI query string to the inputs of the
+  # "Business Calendar Calculate" routine. build_trees.rb embeds this file in the
+  # WebAPI's "Parse Request" node. Parse @request['Query'] rather than relying on
+  # @request['Parameters'], which some engine builds don't provide.
+  require 'uri'
+  require 'json'
+
+  module BizCalParams_31dca4764d
+    def self.from_query(query)
+      params = {}
+      begin
+        URI.decode_www_form(query.to_s).each { |key, value| params[key.to_s] = value.to_s }
+      rescue ArgumentError
+        return { 'Operation' =&gt; 'invalid_query_string' }
+      end
+      {
+        'Operation' =&gt; params['op'].to_s,
+        'Calendar' =&gt; params['calendar'].to_s,
+        'Date' =&gt; (params['from'] || params['date'] || params['start']).to_s,
+        'End Date' =&gt; params['end'].to_s,
+        'Amount' =&gt; params['amount'].to_s,
+        'Unit' =&gt; params['unit'].to_s,
+        'Direction' =&gt; params['direction'].to_s,
+        'Adjust' =&gt; params['adjust'].to_s,
+        'Time' =&gt; params['time'].to_s
+      }
+    end
+  end
+end
+
+# Map the query string (?op=...&amp;calendar=...&amp;from=...) to the routine's inputs.
+# @request['Query'] is parsed directly because @request['Parameters'] is
+# missing on some engine builds.
+query = (@request['Query'] rescue nil)
+JSON.generate(BizCalParams_31dca4764d.from_query(query), ascii_only: true)
+%&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="then calculate" type="Complete" value="">routine_business_calendar_calculate_v1_2</task>
+                </dependents>
+            </task>
+            <task definition_id="routine_business_calendar_calculate_v1" id="routine_business_calendar_calculate_v1_2" name="Calculate" x="662" y="21">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>true</defers>
+                <deferrable>true</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Operation" label="Operation" menu="" required="true" tooltip="add_duration, is_business_day, next_business_day, previous_business_day, business_days_between, business_hours_between, is_business_time or next_business_opening">&lt;%= JSON.parse(@results['Parse Request']['output'])['Operation'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Calendar" label="Calendar" menu="" required="false" tooltip="Business calendar submission ID. Blank uses the default calendar; an unknown ID uses the default with a warning.">&lt;%= JSON.parse(@results['Parse Request']['output'])['Calendar'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Date" label="Date" menu="" required="false" tooltip="YYYY-MM-DD, or an ISO 8601 datetime with an offset (converted to the calendar time zone). The from date, start or moment. In business-hours operations a date alone means that day's opening.">&lt;%= JSON.parse(@results['Parse Request']['output'])['Date'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="End Date" label="End Date" menu="" required="false" tooltip="business_days_between / business_hours_between only: YYYY-MM-DD or ISO 8601 datetime.">&lt;%= JSON.parse(@results['Parse Request']['output'])['End Date'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Amount" label="Amount" menu="" required="false" tooltip="add_duration only: negative reverses the direction. Whole numbers, except business_hours, which allows decimals (1.5 = 90 minutes).">&lt;%= JSON.parse(@results['Parse Request']['output'])['Amount'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Unit" label="Unit" menu="" required="false" tooltip="add_duration only: business_days, calendar_days, weeks or business_hours.">&lt;%= JSON.parse(@results['Parse Request']['output'])['Unit'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Direction" label="Direction" menu="" required="false" tooltip="add_duration only: after (default) or before.">&lt;%= JSON.parse(@results['Parse Request']['output'])['Direction'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Adjust" label="Adjust" menu="" required="false" tooltip="add_duration only: none (default), previous_business_day or next_business_day. Ignored for business_hours.">&lt;%= JSON.parse(@results['Parse Request']['output'])['Adjust'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Time" label="Time" menu="" required="false" tooltip="Optional HH:MM overriding the calendar Default Activation Hour on business-day results.">&lt;%= JSON.parse(@results['Parse Request']['output'])['Time'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="then return" type="Complete" value="">system_tree_return_v1_3</task>
+                </dependents>
+            </task>
+            <task definition_id="system_tree_return_v1" id="system_tree_return_v1_3" name="Return" x="1027" y="18">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="content" label="Content" menu="" required="false" tooltip="">&lt;%= @results['Calculate']['Result JSON'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="content_type" label="Content Type" menu="" required="false" tooltip="">application/json</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="headers_json" label="Headers (JSON)" menu="" required="false" tooltip="">{"Cache-Control":"no-store"}</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="response_code" label="Response Code" menu="" required="false" tooltip="">&lt;%= @results['Calculate']['HTTP Status'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+        </request>
+    </taskTree>
+</tree>

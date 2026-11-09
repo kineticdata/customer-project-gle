@@ -1,0 +1,1467 @@
+<tree schema_version="1.0">
+    <sourceName>-</sourceName>
+    <sourceGroup>-</sourceGroup>
+    <definitionId>routine_business_calendar_calculate_v1</definitionId>
+    <type>Global Routine</type>
+    <status>Active</status>
+    <taskTree builder_version="" schema_version="1.0" version="">
+        <name>Business Calendar Calculate</name>
+        <author></author>
+        <notes></notes>
+        <lastID>5</lastID>
+        <taskDefinition id="routine_business_calendar_calculate_v1" name="Business Calendar Calculate" schema_version="1.0" version="1">
+            <visible>false</visible>
+            <deferrable>true</deferrable>
+            <parameters>
+                <parameter id="Operation" label="Operation" required="true" tooltip="add_duration, is_business_day, next_business_day, previous_business_day, business_days_between, business_hours_between, is_business_time or next_business_opening"></parameter>
+                <parameter id="Calendar" label="Calendar" required="false" tooltip="Business calendar submission ID. Blank uses the default calendar; an unknown ID uses the default with a warning."></parameter>
+                <parameter id="Date" label="Date" required="false" tooltip="YYYY-MM-DD, or an ISO 8601 datetime with an offset (converted to the calendar time zone). The from date, start or moment. In business-hours operations a date alone means that day's opening."></parameter>
+                <parameter id="End Date" label="End Date" required="false" tooltip="business_days_between / business_hours_between only: YYYY-MM-DD or ISO 8601 datetime."></parameter>
+                <parameter id="Amount" label="Amount" required="false" tooltip="add_duration only: negative reverses the direction. Whole numbers, except business_hours, which allows decimals (1.5 = 90 minutes)."></parameter>
+                <parameter id="Unit" label="Unit" required="false" tooltip="add_duration only: business_days, calendar_days, weeks or business_hours."></parameter>
+                <parameter id="Direction" label="Direction" required="false" tooltip="add_duration only: after (default) or before."></parameter>
+                <parameter id="Adjust" label="Adjust" required="false" tooltip="add_duration only: none (default), previous_business_day or next_business_day. Ignored for business_hours."></parameter>
+                <parameter id="Time" label="Time" required="false" tooltip="Optional HH:MM overriding the calendar Default Activation Hour on business-day results."></parameter>
+            </parameters>
+            <handler name="system_tree_call" version="1"></handler>
+            <results format="xml">
+                <result name="Result Date" tooltip="YYYY-MM-DD result in the calendar time zone (add_duration, next/previous_business_day, next_business_opening)."></result>
+                <result name="Result Datetime" tooltip="The result as ISO 8601 UTC. Business-day results are stamped at the activation hour."></result>
+                <result name="Result Datetime Local" tooltip="The same moment in the calendar time zone with its offset, e.g. 2026-11-23T13:00:00-06:00."></result>
+                <result name="Is Business Day" tooltip="true or false."></result>
+                <result name="Is Business Time" tooltip="is_business_time only: true when the moment is inside working hours on a business day."></result>
+                <result name="Reason" tooltip="is_business_day / is_business_time: working_day, open, before_open, after_close, weekend, non_working_day, holiday, closure or override."></result>
+                <result name="Already Open" tooltip="next_business_opening only: true when the given moment was already inside working hours."></result>
+                <result name="Count" tooltip="business_days_between only: business days after Start Date up to and including End Date."></result>
+                <result name="Minutes" tooltip="business_hours_between only: working minutes between the two moments (negative if End is before Start)."></result>
+                <result name="Hours" tooltip="business_hours_between only: the same as decimal hours, rounded to 2 places."></result>
+                <result name="Calendar" tooltip="ID of the calendar used."></result>
+                <result name="Calendar Name" tooltip="Name of the calendar used."></result>
+                <result name="Calendar Fallback" tooltip="true when the requested calendar was not found and the default was used."></result>
+                <result name="Warnings" tooltip="JSON array of {code, message}."></result>
+                <result name="Error Code" tooltip="Blank on success."></result>
+                <result name="Error Message" tooltip="Blank on success."></result>
+                <result name="HTTP Status" tooltip="200, 400 (bad input) or 500 (configuration or engine problem)."></result>
+                <result name="Result JSON" tooltip="The full result as JSON."></result>
+            </results>
+        </taskDefinition>
+        <request>
+            <task definition_id="system_start_v1" id="start" name="Start" x="10" y="10">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>false</visible>
+                <parameters></parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="get calendars" type="Complete" value="">system_integration_v1_1</task>
+                </dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_1" name="Get Calendars" x="220" y="10">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">94e330c5-3ea9-42c3-b232-3c8bb25dabe2</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Kapp Slug" label="Kapp Slug" menu="" required="false" tooltip="">service-portal</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Form Slug" label="Form Slug" menu="" required="false" tooltip="">business-calendar</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Query" label="Query" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Order By" label="Order By" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Limit" label="Limit" menu="" required="false" tooltip="">1000</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Page Token" label="Page Token" menu="" required="false" tooltip=""></parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="then plan" type="Complete" value="">utilities_echo_v1_2</task>
+                </dependents>
+            </task>
+            <task definition_id="utilities_echo_v1" id="utilities_echo_v1_2" name="Plan" x="430" y="10">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="input" label="Input" menu="" required="true" tooltip="">&lt;%=
+# ---------------------------------------------------------------------------
+# Generated from template/tooling/business-calendar/business_calendar.rb by build_trees.rb.
+# Edit that file and rebuild rather than editing this node by hand.
+#
+# The module name ends in a hash of the source so a new version never clashes
+# with an older one still loaded in the engine. It is defined once per engine
+# (defined? is a plain lookup because the engine may evaluate this ERB inside
+# a class).
+# ---------------------------------------------------------------------------
+unless defined?(BizCal_9a8c2f5198)
+  # Business Calendar calculation library.
+  #
+  # This file is the canonical implementation. build_trees.rb embeds it verbatim
+  # (comments included) into the "Plan" and "Calculate" nodes of the "Business
+  # Calendar Calculate" routine, so edit it here and rebuild rather than editing
+  # the routine nodes. Keep it readable: people review these nodes in the
+  # workflow builder. It must stay ASCII-only, must not contain the ERB closing
+  # tag, and must not use heredocs (the build indents every line).
+  #
+  # Two kinds of calculation:
+  # - Business days: date arithmetic over working days, holidays, closures and
+  #   working-day overrides. The time of day of an input is ignored.
+  # - Business hours: the same days, limited to the calendar's Work Start to
+  #   Work End window (one window for every working day, no breaks). Times are
+  #   wall-clock times in the calendar's time zone, kept as a date plus a
+  #   minute of the day.
+  require 'date'
+  require 'json'
+  begin
+    require 'java'
+  rescue LoadError
+  end
+
+  module BizCal_9a8c2f5198
+    OPERATIONS = %w[
+      add_duration is_business_day next_business_day previous_business_day business_days_between
+      business_hours_between is_business_time next_business_opening
+    ].freeze
+    # Operations (and the business_hours unit) that need Work Start / Work End.
+    HOURS_OPERATIONS = %w[business_hours_between is_business_time next_business_opening].freeze
+    BETWEEN_OPERATIONS = %w[business_days_between business_hours_between].freeze
+    UNIT_LIMITS = { 'business_days' =&gt; 2600, 'calendar_days' =&gt; 3660, 'weeks' =&gt; 520, 'business_hours' =&gt; 10_000 }.freeze
+    DIRECTIONS = %w[after before].freeze
+    ADJUSTS = %w[none previous_business_day next_business_day].freeze
+    DAY_NAMES = %w[Sunday Monday Tuesday Wednesday Thursday Friday Saturday].freeze
+    HHMM = /\A([01]\d|2[0-3]):[0-5]\d\z/
+    MAX_STEPS = 4000
+    NEXT_PREVIOUS_DAYS = 60
+    PAD_DAYS = 31
+    INPUT_ERRORS = %w[INVALID_ARGUMENT INVALID_DATE LIMIT_EXCEEDED].freeze
+
+    class Error &lt; StandardError
+      attr_reader :code
+
+      def initialize(code, message)
+        super(message)
+        @code = code
+      end
+    end
+
+    # Time zone conversions use java.time on the Kinetic Task engine (JRuby).
+    # The local test harness replaces these methods.
+    module Tz
+      def self.zone(id)
+        java.time.ZoneId.of(id.to_s)
+      rescue Exception
+        raise Error.new('CALENDAR_INVALID', "Time zone '#{id}' is not a valid IANA time zone")
+      end
+
+      def self.validate(id)
+        zone(id)
+        true
+      end
+
+      # An ISO 8601 datetime with an offset, as [local Date, local minute of day]
+      # in the calendar's time zone. Seconds are dropped.
+      def self.local_moment(iso, id)
+        local = java.time.OffsetDateTime.parse(iso).toInstant.atZone(zone(id)).toLocalDateTime
+        [Date.new(local.getYear, local.getMonthValue, local.getDayOfMonth), local.getHour * 60 + local.getMinute]
+      end
+
+      def self.zoned(date, minute, id)
+        local = java.time.LocalDate.of(date.year, date.month, date.day)
+        java.time.ZonedDateTime.of(local, java.time.LocalTime.of(minute / 60, minute % 60), zone(id))
+      end
+
+      # The local wall-clock time as an instant in UTC, e.g. 2026-11-19T14:00:00Z.
+      def self.utc_at(date, minute, id)
+        java.time.format.DateTimeFormatter::ISO_INSTANT.format(zoned(date, minute, id).toInstant).to_s
+      end
+
+      # The local wall-clock time with its offset, e.g. 2026-11-19T08:00:00-06:00.
+      def self.local_iso(date, minute, id)
+        zoned(date, minute, id).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssxxx")).to_s
+      end
+    end
+
+    def self.blank?(value)
+      value.nil? || value.to_s.strip.empty?
+    end
+
+    def self.fmt(date)
+      date.strftime('%Y-%m-%d')
+    end
+
+    # 'HH:MM' to minutes after midnight.
+    def self.minutes(hhmm)
+      hour, minute = hhmm.split(':').map(&amp;:to_i)
+      hour * 60 + minute
+    end
+
+    # Integration outputs arrive as JSON strings; accept parsed values too.
+    def self.submissions(raw)
+      value = raw.is_a?(String) ? (raw.strip.empty? ? [] : JSON.parse(raw)) : raw
+      value = value['submissions'] if value.is_a?(Hash)
+      Array(value)
+    end
+
+    def self.submitted?(submission)
+      submission['coreState'].nil? || submission['coreState'] == 'Submitted'
+    end
+
+    # --- Request ---------------------------------------------------------------
+
+    def self.request(inputs)
+      op = inputs['Operation'].to_s.strip
+      unless OPERATIONS.include?(op)
+        raise Error.new('INVALID_ARGUMENT', "Operation must be one of: #{OPERATIONS.join(', ')}")
+      end
+      req = {
+        'operation' =&gt; op,
+        'calendar' =&gt; inputs['Calendar'].to_s.strip,
+        'dateRaw' =&gt; inputs['Date'].to_s.strip,
+        'endRaw' =&gt; inputs['End Date'].to_s.strip
+      }
+      add_duration_request(inputs, req) if op == 'add_duration'
+      time = inputs['Time'].to_s.strip
+      unless time.empty?
+        raise Error.new('INVALID_ARGUMENT', 'Time must be HH:MM in 24-hour time') unless time =~ HHMM
+        req['time'] = time
+      end
+      req
+    end
+
+    def self.add_duration_request(inputs, req)
+      unit = inputs['Unit'].to_s.strip
+      unless UNIT_LIMITS.key?(unit)
+        raise Error.new('INVALID_ARGUMENT', "Unit must be one of: #{UNIT_LIMITS.keys.join(', ')}")
+      end
+      text = inputs['Amount'].to_s.strip
+      if unit == 'business_hours'
+        # Hours may be fractional (1.5 = 90 minutes); the calculation is in whole minutes.
+        raise Error.new('INVALID_ARGUMENT', 'Amount must be a number of hours') unless text =~ /\A[+-]?\d+(\.\d+)?\z/
+        amount = text.include?('.') ? text.to_f : text.to_i
+      else
+        raise Error.new('INVALID_ARGUMENT', 'Amount must be a whole number') unless text =~ /\A[+-]?\d+\z/
+        amount = text.to_i
+      end
+      limit = UNIT_LIMITS[unit]
+      if amount.abs &gt; limit
+        raise Error.new('LIMIT_EXCEEDED', "Amount must be between -#{limit} and #{limit} for #{unit}")
+      end
+      direction = blank?(inputs['Direction']) ? 'after' : inputs['Direction'].to_s.strip
+      unless DIRECTIONS.include?(direction)
+        raise Error.new('INVALID_ARGUMENT', "Direction must be one of: #{DIRECTIONS.join(', ')}")
+      end
+      adjust = blank?(inputs['Adjust']) ? 'none' : inputs['Adjust'].to_s.strip
+      raise Error.new('INVALID_ARGUMENT', "Adjust must be one of: #{ADJUSTS.join(', ')}") unless ADJUSTS.include?(adjust)
+      req.merge!('unit' =&gt; unit, 'amount' =&gt; amount, 'direction' =&gt; direction, 'adjust' =&gt; adjust)
+      req['minutes'] = (text.to_r * 60).round.abs if unit == 'business_hours'
+    end
+
+    # A negative amount reverses the direction.
+    def self.backward?(req)
+      (req['direction'] == 'before') ^ (req['amount'] &lt; 0)
+    end
+
+    def self.signed_amount(req)
+      backward?(req) ? -req['amount'].abs : req['amount'].abs
+    end
+
+    def self.needs_hours?(req)
+      HOURS_OPERATIONS.include?(req['operation']) || req['unit'] == 'business_hours'
+    end
+
+    # Accepts YYYY-MM-DD, or an ISO 8601 datetime with an offset, which is
+    # converted to the calendar's time zone. Returns [date, minute of day], with
+    # a nil minute for a date-only value.
+    def self.parse_moment(value, field, time_zone)
+      text = value.to_s.strip
+      raise Error.new('INVALID_ARGUMENT', "#{field} is required") if text.empty?
+      if text =~ /\A\d{4}-\d{2}-\d{2}\z/
+        begin
+          return [Date.strptime(text, '%Y-%m-%d'), nil]
+        rescue ArgumentError
+          raise Error.new('INVALID_DATE', "#{field} '#{text}' is not a valid date")
+        end
+      end
+      begin
+        Tz.local_moment(text, time_zone)
+      rescue Error
+        raise
+      rescue Exception
+        raise Error.new('INVALID_DATE', "#{field} '#{text}' must be YYYY-MM-DD or an ISO 8601 datetime with an offset")
+      end
+    end
+
+    # --- Calendar --------------------------------------------------------------
+
+    def self.calendar_from(submission)
+      values = submission['values'] || {}
+      days = values['Working Days']
+      days = JSON.parse(days) if days.is_a?(String) &amp;&amp; days.strip.start_with?('[')
+      {
+        'id' =&gt; submission['id'].to_s,
+        'name' =&gt; values['Name'].to_s,
+        'timeZone' =&gt; values['Time Zone'].to_s,
+        'workingDays' =&gt; Array(days).map(&amp;:to_s),
+        'activationHour' =&gt; values['Default Activation Hour'].to_s.strip,
+        'workStart' =&gt; values['Work Start'].to_s.strip,
+        'workEnd' =&gt; values['Work End'].to_s.strip,
+        'isDefault' =&gt; values['Is Default'] == 'Yes'
+      }
+    end
+
+    # A blank ID uses the default calendar. An unknown ID also uses the default,
+    # with a warning.
+    def self.resolve_calendar(calendar_submissions, requested)
+      calendars = calendar_submissions.select { |s| submitted?(s) }.map { |s| calendar_from(s) }
+      warnings = []
+      calendar = nil
+      unless blank?(requested)
+        calendar = calendars.find { |c| c['id'] == requested }
+        unless calendar
+          warnings &lt;&lt; {
+            'code' =&gt; 'CALENDAR_NOT_FOUND_USED_DEFAULT',
+            'message' =&gt; "Calendar '#{requested}' was not found, so the default calendar was used."
+          }
+        end
+      end
+      unless calendar
+        defaults = calendars.select { |c| c['isDefault'] }
+        raise Error.new('NO_CALENDAR', 'No business calendar is marked as the default') if defaults.empty?
+        if defaults.size &gt; 1
+          names = defaults.map { |c| c['name'] }.join(', ')
+          raise Error.new('AMBIGUOUS_DEFAULT', "More than one business calendar is marked as the default: #{names}")
+        end
+        calendar = defaults.first
+      end
+      validate_calendar(calendar)
+      calendar['fallback'] = !warnings.empty?
+      [calendar, warnings]
+    end
+
+    def self.validate_calendar(calendar)
+      label = "Calendar '#{calendar['name']}'"
+      Tz.validate(calendar['timeZone'])
+      raise Error.new('CALENDAR_INVALID', "#{label} has no working days") if calendar['workingDays'].empty?
+      unknown = calendar['workingDays'] - DAY_NAMES
+      raise Error.new('CALENDAR_INVALID', "#{label} has unknown working days: #{unknown.join(', ')}") unless unknown.empty?
+      unless calendar['activationHour'] =~ HHMM
+        raise Error.new('CALENDAR_INVALID', "#{label} has an invalid Default Activation Hour")
+      end
+    end
+
+    # Only business-hours calculations need working hours, so calendars created
+    # before Work Start / Work End existed keep working for business days.
+    def self.validate_hours(calendar)
+      label = "Calendar '#{calendar['name']}'"
+      unless calendar['workStart'] =~ HHMM &amp;&amp; calendar['workEnd'] =~ HHMM
+        raise Error.new('CALENDAR_INVALID', "#{label} needs Work Start and Work End (HH:MM) for business-hours calculations")
+      end
+      calendar['workStartMinute'] = minutes(calendar['workStart'])
+      calendar['workEndMinute'] = minutes(calendar['workEnd'])
+      unless calendar['workStartMinute'] &lt; calendar['workEndMinute']
+        raise Error.new('CALENDAR_INVALID', "#{label} has Work Start at or after Work End (overnight hours are not supported)")
+      end
+    end
+
+    # --- Plan: validate, resolve the calendar, size the exception window --------
+
+    def self.plan(inputs, calendars_raw)
+      req = request(inputs)
+      calendar, warnings = resolve_calendar(submissions(calendars_raw), req['calendar'])
+      time_zone = calendar['timeZone']
+      hours = needs_hours?(req)
+      validate_hours(calendar) if hours
+      between = BETWEEN_OPERATIONS.include?(req['operation'])
+
+      # A date-only value in a business-hours calculation means that day's opening.
+      date, minute = parse_moment(req['dateRaw'], between ? 'Start Date' : 'Date', time_zone)
+      req['date'] = fmt(date)
+      req['minute'] = minute || calendar['workStartMinute'] if hours
+      end_date = nil
+      if between
+        end_date, end_minute = parse_moment(req['endRaw'], 'End Date', time_zone)
+        req['end'] = fmt(end_date)
+        req['endMinute'] = end_minute || calendar['workStartMinute'] if hours
+      end
+
+      from, to = window(req, date, end_date, calendar)
+      {
+        'ok' =&gt; true,
+        'request' =&gt; req,
+        'calendar' =&gt; calendar,
+        'warnings' =&gt; warnings,
+        'window' =&gt; { 'from' =&gt; fmt(from), 'to' =&gt; fmt(to) },
+        # BETWEEN includes the first value and excludes the second.
+        'exceptionQuery' =&gt; "values[Calendar] = \"#{calendar['id']}\" AND " \
+                            "values[Date] BETWEEN (\"#{fmt(from)}\",\"#{fmt(to + 1)}\")"
+      }
+    end
+
+    # The date range of exceptions fetched once per calculation. A calculation
+    # that walks outside it fails with WINDOW_EXCEEDED rather than guessing.
+    def self.window(req, date, end_date, calendar)
+      from = to = date
+      working_days = calendar['workingDays'].size
+      case req['operation']
+      when 'next_business_day', 'next_business_opening'
+        to = date + NEXT_PREVIOUS_DAYS
+      when 'previous_business_day'
+        from = date - NEXT_PREVIOUS_DAYS
+      when 'business_days_between', 'business_hours_between'
+        from, to = [date, end_date].minmax
+      when 'add_duration'
+        # Working days the calculation may need, spread over calendar weeks.
+        days =
+          case req['unit']
+          when 'business_days' then req['amount'].abs
+          when 'business_hours'
+            (req['minutes'].to_f / (calendar['workEndMinute'] - calendar['workStartMinute'])).ceil
+          end
+        if days
+          span = (days * 7.0 / working_days).ceil + NEXT_PREVIOUS_DAYS
+          if backward?(req)
+            from = date - span
+          else
+            to = date + span
+          end
+        else
+          offset = req['unit'] == 'weeks' ? signed_amount(req) * 7 : signed_amount(req)
+          from = to = date + offset
+        end
+      end
+      [from - PAD_DAYS, to + PAD_DAYS]
+    end
+
+    # --- Calculate ---------------------------------------------------------------
+
+    class Calculator
+      def initialize(calendar, from, to, exception_submissions)
+        @working = calendar['workingDays'].map { |name| DAY_NAMES.index(name) }
+        @open = calendar['workStartMinute']
+        @close = calendar['workEndMinute']
+        @from = from
+        @to = to
+        @steps = 0
+        @exceptions = {}
+        exception_submissions.each do |submission|
+          next unless BizCal_9a8c2f5198.submitted?(submission)
+          values = submission['values'] || {}
+          next unless values['Calendar'].to_s == calendar['id']
+          @exceptions[values['Date'].to_s] = { 'type' =&gt; values['Type'].to_s, 'name' =&gt; values['Name'].to_s }
+        end
+      end
+
+      # [business day?, reason, exception name]
+      def info(date)
+        if date &lt; @from || date &gt; @to
+          raise Error.new('WINDOW_EXCEEDED', 'The calculation ran past the exceptions fetched for it')
+        end
+        exception = @exceptions[BizCal_9a8c2f5198.fmt(date)]
+        case exception &amp;&amp; exception['type']
+        when 'Working Day Override' then return [true, 'override', exception['name']]
+        when 'Holiday' then return [false, 'holiday', exception['name']]
+        when 'Closure' then return [false, 'closure', exception['name']]
+        end
+        return [true, 'working_day', nil] if @working.include?(date.wday)
+        [false, [0, 6].include?(date.wday) ? 'weekend' : 'non_working_day', nil]
+      end
+
+      def business_day?(date)
+        info(date)[0]
+      end
+
+      def step!
+        @steps += 1
+        raise Error.new('ITERATION_LIMIT', "The calculation exceeded #{MAX_STEPS} days") if @steps &gt; MAX_STEPS
+      end
+
+      # The first business day strictly after (1) or before (-1) the date.
+      def walk(date, direction)
+        loop do
+          date += direction
+          step!
+          return date if business_day?(date)
+        end
+      end
+
+      # The start date is never counted.
+      def add_business_days(date, amount)
+        direction = amount &lt; 0 ? -1 : 1
+        counted = 0
+        while counted &lt; amount.abs
+          date += direction
+          step!
+          counted += 1 if business_day?(date)
+        end
+        date
+      end
+
+      def adjust(date, mode)
+        return date if mode == 'none' || business_day?(date)
+        walk(date, mode == 'next_business_day' ? 1 : -1)
+      end
+
+      # Business days after start, up to and including end; negative if end &lt; start.
+      def between(start, finish)
+        return 0 if start == finish
+        low, high, sign = start &lt; finish ? [start, finish, 1] : [finish, start, -1]
+        count = 0
+        date = low
+        while date &lt; high
+          date += 1
+          step!
+          count += 1 if business_day?(date)
+        end
+        sign * count
+      end
+
+      # --- Business hours (minutes of the day in the calendar's time zone) ---------
+
+      # [open?, reason, exception name]. Opening time is open; closing time is not.
+      def time_info(date, minute)
+        business, reason, name = info(date)
+        return [false, reason, name] unless business
+        return [false, 'before_open', name] if minute &lt; @open
+        return [false, 'after_close', name] if minute &gt;= @close
+        [true, 'open', name]
+      end
+
+      # The moment itself if business is open then, otherwise the next opening.
+      def roll_forward(date, minute)
+        return [date, [minute, @open].max] if business_day?(date) &amp;&amp; minute &lt; @close
+        [walk(date, 1), @open]
+      end
+
+      # Mirror image for counting backward: the moment itself if open, otherwise
+      # the previous closing.
+      def roll_backward(date, minute)
+        return [date, [minute, @close].min] if business_day?(date) &amp;&amp; minute &gt; @open
+        [walk(date, -1), @close]
+      end
+
+      # Adds (or subtracts) business minutes, day by day. Landing exactly on the
+      # closing time returns closing time that day rather than the next opening.
+      def add_business_minutes(date, minute, amount, backward)
+        if backward
+          date, minute = roll_backward(date, minute)
+          loop do
+            available = minute - @open
+            return [date, minute - amount] if amount &lt;= available
+            amount -= available
+            date = walk(date, -1)
+            minute = @close
+          end
+        else
+          date, minute = roll_forward(date, minute)
+          loop do
+            available = @close - minute
+            return [date, minute + amount] if amount &lt;= available
+            amount -= available
+            date = walk(date, 1)
+            minute = @open
+          end
+        end
+      end
+
+      # Working minutes between two moments; negative if finish is before start.
+      # Only the part of each business day inside working hours counts.
+      def business_minutes_between(start, finish)
+        return 0 if start == finish
+        low, high, sign = (start &lt;=&gt; finish) &lt; 0 ? [start, finish, 1] : [finish, start, -1]
+        total = 0
+        date = low[0]
+        loop do
+          if business_day?(date)
+            from = date == low[0] ? low[1] : 0
+            to = date == high[0] ? high[1] : 24 * 60
+            span = [to, @close].min - [from, @open].max
+            total += span if span &gt; 0
+          end
+          break if date &gt;= high[0]
+          date += 1
+          step!
+        end
+        sign * total
+      end
+    end
+
+    def self.calculate(plan, exceptions_raw)
+      req = plan['request']
+      calendar = plan['calendar']
+      window = plan['window']
+      calc = Calculator.new(calendar, Date.parse(window['from']), Date.parse(window['to']), submissions(exceptions_raw))
+      date = Date.parse(req['date'])
+      minute = req['minute']
+      result =
+        case req['operation']
+        when 'add_duration'
+          if req['unit'] == 'business_hours'
+            day, at = calc.add_business_minutes(date, minute, req['minutes'], backward?(req))
+            moment_result(day, at, calendar).merge('isBusinessDay' =&gt; calc.business_day?(day))
+          else
+            date_result(calc, add_duration(calc, req, date), req, calendar)
+          end
+        when 'next_business_day' then date_result(calc, calc.walk(date, 1), req, calendar)
+        when 'previous_business_day' then date_result(calc, calc.walk(date, -1), req, calendar)
+        when 'is_business_day'
+          business, reason, name = calc.info(date)
+          { 'date' =&gt; fmt(date), 'isBusinessDay' =&gt; business, 'reason' =&gt; reason, 'exceptionName' =&gt; name }
+        when 'business_days_between'
+          { 'start' =&gt; req['date'], 'end' =&gt; req['end'], 'count' =&gt; calc.between(date, Date.parse(req['end'])) }
+        when 'business_hours_between'
+          finish = [Date.parse(req['end']), req['endMinute']]
+          total = calc.business_minutes_between([date, minute], finish)
+          {
+            'start' =&gt; Tz.local_iso(date, minute, calendar['timeZone']),
+            'end' =&gt; Tz.local_iso(finish[0], finish[1], calendar['timeZone']),
+            'minutes' =&gt; total,
+            'hours' =&gt; (total / 60.0).round(2)
+          }
+        when 'is_business_time'
+          open, reason, name = calc.time_info(date, minute)
+          moment_result(date, minute, calendar).merge('isBusinessTime' =&gt; open, 'reason' =&gt; reason, 'exceptionName' =&gt; name)
+        when 'next_business_opening'
+          already_open = calc.time_info(date, minute)[0]
+          day, at = calc.roll_forward(date, minute)
+          moment_result(day, at, calendar).merge('alreadyOpen' =&gt; already_open)
+        end
+      {
+        'operation' =&gt; req['operation'],
+        'calendar' =&gt; {
+          'id' =&gt; calendar['id'],
+          'name' =&gt; calendar['name'],
+          'timeZone' =&gt; calendar['timeZone'],
+          'fallback' =&gt; calendar['fallback']
+        },
+        'result' =&gt; result,
+        'warnings' =&gt; plan['warnings']
+      }
+    end
+
+    def self.add_duration(calc, req, date)
+      amount = signed_amount(req)
+      target =
+        case req['unit']
+        when 'business_days' then calc.add_business_days(date, amount)
+        when 'calendar_days' then date + amount
+        when 'weeks' then date + (amount * 7)
+        end
+      calc.adjust(target, req['adjust'])
+    end
+
+    # A local wall-clock moment as UTC and as local time with its offset.
+    def self.moment_result(date, minute, calendar)
+      {
+        'date' =&gt; fmt(date),
+        'datetime' =&gt; Tz.utc_at(date, minute, calendar['timeZone']),
+        'datetimeLocal' =&gt; Tz.local_iso(date, minute, calendar['timeZone'])
+      }
+    end
+
+    # Business-day results are stamped with the activation hour (or Time).
+    def self.date_result(calc, date, req, calendar)
+      minute = minutes(req['time'] || calendar['activationHour'])
+      moment_result(date, minute, calendar).merge('isBusinessDay' =&gt; calc.business_day?(date))
+    end
+
+    # --- Node entry points (return JSON strings) ----------------------------------
+
+    def self.error_result(error)
+      code = error.is_a?(Error) ? error.code : 'INTERNAL_ERROR'
+      message = error.is_a?(Error) ? error.message : "#{error.class}: #{error.message}"
+      {
+        'ok' =&gt; false,
+        'httpStatus' =&gt; INPUT_ERRORS.include?(code) ? 400 : 500,
+        'error' =&gt; { 'code' =&gt; code, 'message' =&gt; message }
+      }
+    end
+
+    def self.run_plan(inputs, calendars_raw)
+      JSON.generate(plan(inputs, calendars_raw), ascii_only: true)
+    rescue Exception =&gt; e
+      JSON.generate(error_result(e), ascii_only: true)
+    end
+
+    def self.run_calculate(plan, exceptions_raw)
+      return JSON.generate(plan, ascii_only: true) unless plan['ok']
+      JSON.generate(calculate(plan, exceptions_raw).merge('ok' =&gt; true, 'httpStatus' =&gt; 200), ascii_only: true)
+    rescue Exception =&gt; e
+      JSON.generate(error_result(e), ascii_only: true)
+    end
+  end
+end
+
+# Validate the routine inputs, choose the calendar (falling back to the
+# default) and work out the date window of exceptions the calculation needs.
+# Returns JSON for the next nodes; on bad input it carries the error instead.
+BizCal_9a8c2f5198.run_plan(@inputs, @results['Get Calendars']['Submissions'])
+%&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="Plan OK?" type="Complete" value="JSON.parse(@results['Plan']['output'])['ok'] == true">system_integration_v1_3</task>
+                    <task label="Plan failed?" type="Complete" value="!(JSON.parse(@results['Plan']['output'])['ok'] == true)">utilities_echo_v1_4</task>
+                </dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_3" name="Get Exceptions" x="640" y="10">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">94e330c5-3ea9-42c3-b232-3c8bb25dabe2</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Kapp Slug" label="Kapp Slug" menu="" required="false" tooltip="">service-portal</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Form Slug" label="Form Slug" menu="" required="false" tooltip="">business-calendar-exception</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Query" label="Query" menu="" required="false" tooltip="">&lt;%=
+  # KQL from the Plan node: this calendar's exceptions within the date window
+  # the calculation can touch (indexed on Calendar + Date).
+  JSON.parse(@results['Plan']['output'])['exceptionQuery']
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Order By" label="Order By" menu="" required="false" tooltip="">values[Date]</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Limit" label="Limit" menu="" required="false" tooltip="">1000</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Page Token" label="Page Token" menu="" required="false" tooltip=""></parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="then calculate" type="Complete" value="">utilities_echo_v1_4</task>
+                </dependents>
+            </task>
+            <task definition_id="utilities_echo_v1" id="utilities_echo_v1_4" name="Calculate" x="850" y="10">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="input" label="Input" menu="" required="true" tooltip="">&lt;%=
+# ---------------------------------------------------------------------------
+# Generated from template/tooling/business-calendar/business_calendar.rb by build_trees.rb.
+# Edit that file and rebuild rather than editing this node by hand.
+#
+# The module name ends in a hash of the source so a new version never clashes
+# with an older one still loaded in the engine. It is defined once per engine
+# (defined? is a plain lookup because the engine may evaluate this ERB inside
+# a class).
+# ---------------------------------------------------------------------------
+unless defined?(BizCal_9a8c2f5198)
+  # Business Calendar calculation library.
+  #
+  # This file is the canonical implementation. build_trees.rb embeds it verbatim
+  # (comments included) into the "Plan" and "Calculate" nodes of the "Business
+  # Calendar Calculate" routine, so edit it here and rebuild rather than editing
+  # the routine nodes. Keep it readable: people review these nodes in the
+  # workflow builder. It must stay ASCII-only, must not contain the ERB closing
+  # tag, and must not use heredocs (the build indents every line).
+  #
+  # Two kinds of calculation:
+  # - Business days: date arithmetic over working days, holidays, closures and
+  #   working-day overrides. The time of day of an input is ignored.
+  # - Business hours: the same days, limited to the calendar's Work Start to
+  #   Work End window (one window for every working day, no breaks). Times are
+  #   wall-clock times in the calendar's time zone, kept as a date plus a
+  #   minute of the day.
+  require 'date'
+  require 'json'
+  begin
+    require 'java'
+  rescue LoadError
+  end
+
+  module BizCal_9a8c2f5198
+    OPERATIONS = %w[
+      add_duration is_business_day next_business_day previous_business_day business_days_between
+      business_hours_between is_business_time next_business_opening
+    ].freeze
+    # Operations (and the business_hours unit) that need Work Start / Work End.
+    HOURS_OPERATIONS = %w[business_hours_between is_business_time next_business_opening].freeze
+    BETWEEN_OPERATIONS = %w[business_days_between business_hours_between].freeze
+    UNIT_LIMITS = { 'business_days' =&gt; 2600, 'calendar_days' =&gt; 3660, 'weeks' =&gt; 520, 'business_hours' =&gt; 10_000 }.freeze
+    DIRECTIONS = %w[after before].freeze
+    ADJUSTS = %w[none previous_business_day next_business_day].freeze
+    DAY_NAMES = %w[Sunday Monday Tuesday Wednesday Thursday Friday Saturday].freeze
+    HHMM = /\A([01]\d|2[0-3]):[0-5]\d\z/
+    MAX_STEPS = 4000
+    NEXT_PREVIOUS_DAYS = 60
+    PAD_DAYS = 31
+    INPUT_ERRORS = %w[INVALID_ARGUMENT INVALID_DATE LIMIT_EXCEEDED].freeze
+
+    class Error &lt; StandardError
+      attr_reader :code
+
+      def initialize(code, message)
+        super(message)
+        @code = code
+      end
+    end
+
+    # Time zone conversions use java.time on the Kinetic Task engine (JRuby).
+    # The local test harness replaces these methods.
+    module Tz
+      def self.zone(id)
+        java.time.ZoneId.of(id.to_s)
+      rescue Exception
+        raise Error.new('CALENDAR_INVALID', "Time zone '#{id}' is not a valid IANA time zone")
+      end
+
+      def self.validate(id)
+        zone(id)
+        true
+      end
+
+      # An ISO 8601 datetime with an offset, as [local Date, local minute of day]
+      # in the calendar's time zone. Seconds are dropped.
+      def self.local_moment(iso, id)
+        local = java.time.OffsetDateTime.parse(iso).toInstant.atZone(zone(id)).toLocalDateTime
+        [Date.new(local.getYear, local.getMonthValue, local.getDayOfMonth), local.getHour * 60 + local.getMinute]
+      end
+
+      def self.zoned(date, minute, id)
+        local = java.time.LocalDate.of(date.year, date.month, date.day)
+        java.time.ZonedDateTime.of(local, java.time.LocalTime.of(minute / 60, minute % 60), zone(id))
+      end
+
+      # The local wall-clock time as an instant in UTC, e.g. 2026-11-19T14:00:00Z.
+      def self.utc_at(date, minute, id)
+        java.time.format.DateTimeFormatter::ISO_INSTANT.format(zoned(date, minute, id).toInstant).to_s
+      end
+
+      # The local wall-clock time with its offset, e.g. 2026-11-19T08:00:00-06:00.
+      def self.local_iso(date, minute, id)
+        zoned(date, minute, id).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssxxx")).to_s
+      end
+    end
+
+    def self.blank?(value)
+      value.nil? || value.to_s.strip.empty?
+    end
+
+    def self.fmt(date)
+      date.strftime('%Y-%m-%d')
+    end
+
+    # 'HH:MM' to minutes after midnight.
+    def self.minutes(hhmm)
+      hour, minute = hhmm.split(':').map(&amp;:to_i)
+      hour * 60 + minute
+    end
+
+    # Integration outputs arrive as JSON strings; accept parsed values too.
+    def self.submissions(raw)
+      value = raw.is_a?(String) ? (raw.strip.empty? ? [] : JSON.parse(raw)) : raw
+      value = value['submissions'] if value.is_a?(Hash)
+      Array(value)
+    end
+
+    def self.submitted?(submission)
+      submission['coreState'].nil? || submission['coreState'] == 'Submitted'
+    end
+
+    # --- Request ---------------------------------------------------------------
+
+    def self.request(inputs)
+      op = inputs['Operation'].to_s.strip
+      unless OPERATIONS.include?(op)
+        raise Error.new('INVALID_ARGUMENT', "Operation must be one of: #{OPERATIONS.join(', ')}")
+      end
+      req = {
+        'operation' =&gt; op,
+        'calendar' =&gt; inputs['Calendar'].to_s.strip,
+        'dateRaw' =&gt; inputs['Date'].to_s.strip,
+        'endRaw' =&gt; inputs['End Date'].to_s.strip
+      }
+      add_duration_request(inputs, req) if op == 'add_duration'
+      time = inputs['Time'].to_s.strip
+      unless time.empty?
+        raise Error.new('INVALID_ARGUMENT', 'Time must be HH:MM in 24-hour time') unless time =~ HHMM
+        req['time'] = time
+      end
+      req
+    end
+
+    def self.add_duration_request(inputs, req)
+      unit = inputs['Unit'].to_s.strip
+      unless UNIT_LIMITS.key?(unit)
+        raise Error.new('INVALID_ARGUMENT', "Unit must be one of: #{UNIT_LIMITS.keys.join(', ')}")
+      end
+      text = inputs['Amount'].to_s.strip
+      if unit == 'business_hours'
+        # Hours may be fractional (1.5 = 90 minutes); the calculation is in whole minutes.
+        raise Error.new('INVALID_ARGUMENT', 'Amount must be a number of hours') unless text =~ /\A[+-]?\d+(\.\d+)?\z/
+        amount = text.include?('.') ? text.to_f : text.to_i
+      else
+        raise Error.new('INVALID_ARGUMENT', 'Amount must be a whole number') unless text =~ /\A[+-]?\d+\z/
+        amount = text.to_i
+      end
+      limit = UNIT_LIMITS[unit]
+      if amount.abs &gt; limit
+        raise Error.new('LIMIT_EXCEEDED', "Amount must be between -#{limit} and #{limit} for #{unit}")
+      end
+      direction = blank?(inputs['Direction']) ? 'after' : inputs['Direction'].to_s.strip
+      unless DIRECTIONS.include?(direction)
+        raise Error.new('INVALID_ARGUMENT', "Direction must be one of: #{DIRECTIONS.join(', ')}")
+      end
+      adjust = blank?(inputs['Adjust']) ? 'none' : inputs['Adjust'].to_s.strip
+      raise Error.new('INVALID_ARGUMENT', "Adjust must be one of: #{ADJUSTS.join(', ')}") unless ADJUSTS.include?(adjust)
+      req.merge!('unit' =&gt; unit, 'amount' =&gt; amount, 'direction' =&gt; direction, 'adjust' =&gt; adjust)
+      req['minutes'] = (text.to_r * 60).round.abs if unit == 'business_hours'
+    end
+
+    # A negative amount reverses the direction.
+    def self.backward?(req)
+      (req['direction'] == 'before') ^ (req['amount'] &lt; 0)
+    end
+
+    def self.signed_amount(req)
+      backward?(req) ? -req['amount'].abs : req['amount'].abs
+    end
+
+    def self.needs_hours?(req)
+      HOURS_OPERATIONS.include?(req['operation']) || req['unit'] == 'business_hours'
+    end
+
+    # Accepts YYYY-MM-DD, or an ISO 8601 datetime with an offset, which is
+    # converted to the calendar's time zone. Returns [date, minute of day], with
+    # a nil minute for a date-only value.
+    def self.parse_moment(value, field, time_zone)
+      text = value.to_s.strip
+      raise Error.new('INVALID_ARGUMENT', "#{field} is required") if text.empty?
+      if text =~ /\A\d{4}-\d{2}-\d{2}\z/
+        begin
+          return [Date.strptime(text, '%Y-%m-%d'), nil]
+        rescue ArgumentError
+          raise Error.new('INVALID_DATE', "#{field} '#{text}' is not a valid date")
+        end
+      end
+      begin
+        Tz.local_moment(text, time_zone)
+      rescue Error
+        raise
+      rescue Exception
+        raise Error.new('INVALID_DATE', "#{field} '#{text}' must be YYYY-MM-DD or an ISO 8601 datetime with an offset")
+      end
+    end
+
+    # --- Calendar --------------------------------------------------------------
+
+    def self.calendar_from(submission)
+      values = submission['values'] || {}
+      days = values['Working Days']
+      days = JSON.parse(days) if days.is_a?(String) &amp;&amp; days.strip.start_with?('[')
+      {
+        'id' =&gt; submission['id'].to_s,
+        'name' =&gt; values['Name'].to_s,
+        'timeZone' =&gt; values['Time Zone'].to_s,
+        'workingDays' =&gt; Array(days).map(&amp;:to_s),
+        'activationHour' =&gt; values['Default Activation Hour'].to_s.strip,
+        'workStart' =&gt; values['Work Start'].to_s.strip,
+        'workEnd' =&gt; values['Work End'].to_s.strip,
+        'isDefault' =&gt; values['Is Default'] == 'Yes'
+      }
+    end
+
+    # A blank ID uses the default calendar. An unknown ID also uses the default,
+    # with a warning.
+    def self.resolve_calendar(calendar_submissions, requested)
+      calendars = calendar_submissions.select { |s| submitted?(s) }.map { |s| calendar_from(s) }
+      warnings = []
+      calendar = nil
+      unless blank?(requested)
+        calendar = calendars.find { |c| c['id'] == requested }
+        unless calendar
+          warnings &lt;&lt; {
+            'code' =&gt; 'CALENDAR_NOT_FOUND_USED_DEFAULT',
+            'message' =&gt; "Calendar '#{requested}' was not found, so the default calendar was used."
+          }
+        end
+      end
+      unless calendar
+        defaults = calendars.select { |c| c['isDefault'] }
+        raise Error.new('NO_CALENDAR', 'No business calendar is marked as the default') if defaults.empty?
+        if defaults.size &gt; 1
+          names = defaults.map { |c| c['name'] }.join(', ')
+          raise Error.new('AMBIGUOUS_DEFAULT', "More than one business calendar is marked as the default: #{names}")
+        end
+        calendar = defaults.first
+      end
+      validate_calendar(calendar)
+      calendar['fallback'] = !warnings.empty?
+      [calendar, warnings]
+    end
+
+    def self.validate_calendar(calendar)
+      label = "Calendar '#{calendar['name']}'"
+      Tz.validate(calendar['timeZone'])
+      raise Error.new('CALENDAR_INVALID', "#{label} has no working days") if calendar['workingDays'].empty?
+      unknown = calendar['workingDays'] - DAY_NAMES
+      raise Error.new('CALENDAR_INVALID', "#{label} has unknown working days: #{unknown.join(', ')}") unless unknown.empty?
+      unless calendar['activationHour'] =~ HHMM
+        raise Error.new('CALENDAR_INVALID', "#{label} has an invalid Default Activation Hour")
+      end
+    end
+
+    # Only business-hours calculations need working hours, so calendars created
+    # before Work Start / Work End existed keep working for business days.
+    def self.validate_hours(calendar)
+      label = "Calendar '#{calendar['name']}'"
+      unless calendar['workStart'] =~ HHMM &amp;&amp; calendar['workEnd'] =~ HHMM
+        raise Error.new('CALENDAR_INVALID', "#{label} needs Work Start and Work End (HH:MM) for business-hours calculations")
+      end
+      calendar['workStartMinute'] = minutes(calendar['workStart'])
+      calendar['workEndMinute'] = minutes(calendar['workEnd'])
+      unless calendar['workStartMinute'] &lt; calendar['workEndMinute']
+        raise Error.new('CALENDAR_INVALID', "#{label} has Work Start at or after Work End (overnight hours are not supported)")
+      end
+    end
+
+    # --- Plan: validate, resolve the calendar, size the exception window --------
+
+    def self.plan(inputs, calendars_raw)
+      req = request(inputs)
+      calendar, warnings = resolve_calendar(submissions(calendars_raw), req['calendar'])
+      time_zone = calendar['timeZone']
+      hours = needs_hours?(req)
+      validate_hours(calendar) if hours
+      between = BETWEEN_OPERATIONS.include?(req['operation'])
+
+      # A date-only value in a business-hours calculation means that day's opening.
+      date, minute = parse_moment(req['dateRaw'], between ? 'Start Date' : 'Date', time_zone)
+      req['date'] = fmt(date)
+      req['minute'] = minute || calendar['workStartMinute'] if hours
+      end_date = nil
+      if between
+        end_date, end_minute = parse_moment(req['endRaw'], 'End Date', time_zone)
+        req['end'] = fmt(end_date)
+        req['endMinute'] = end_minute || calendar['workStartMinute'] if hours
+      end
+
+      from, to = window(req, date, end_date, calendar)
+      {
+        'ok' =&gt; true,
+        'request' =&gt; req,
+        'calendar' =&gt; calendar,
+        'warnings' =&gt; warnings,
+        'window' =&gt; { 'from' =&gt; fmt(from), 'to' =&gt; fmt(to) },
+        # BETWEEN includes the first value and excludes the second.
+        'exceptionQuery' =&gt; "values[Calendar] = \"#{calendar['id']}\" AND " \
+                            "values[Date] BETWEEN (\"#{fmt(from)}\",\"#{fmt(to + 1)}\")"
+      }
+    end
+
+    # The date range of exceptions fetched once per calculation. A calculation
+    # that walks outside it fails with WINDOW_EXCEEDED rather than guessing.
+    def self.window(req, date, end_date, calendar)
+      from = to = date
+      working_days = calendar['workingDays'].size
+      case req['operation']
+      when 'next_business_day', 'next_business_opening'
+        to = date + NEXT_PREVIOUS_DAYS
+      when 'previous_business_day'
+        from = date - NEXT_PREVIOUS_DAYS
+      when 'business_days_between', 'business_hours_between'
+        from, to = [date, end_date].minmax
+      when 'add_duration'
+        # Working days the calculation may need, spread over calendar weeks.
+        days =
+          case req['unit']
+          when 'business_days' then req['amount'].abs
+          when 'business_hours'
+            (req['minutes'].to_f / (calendar['workEndMinute'] - calendar['workStartMinute'])).ceil
+          end
+        if days
+          span = (days * 7.0 / working_days).ceil + NEXT_PREVIOUS_DAYS
+          if backward?(req)
+            from = date - span
+          else
+            to = date + span
+          end
+        else
+          offset = req['unit'] == 'weeks' ? signed_amount(req) * 7 : signed_amount(req)
+          from = to = date + offset
+        end
+      end
+      [from - PAD_DAYS, to + PAD_DAYS]
+    end
+
+    # --- Calculate ---------------------------------------------------------------
+
+    class Calculator
+      def initialize(calendar, from, to, exception_submissions)
+        @working = calendar['workingDays'].map { |name| DAY_NAMES.index(name) }
+        @open = calendar['workStartMinute']
+        @close = calendar['workEndMinute']
+        @from = from
+        @to = to
+        @steps = 0
+        @exceptions = {}
+        exception_submissions.each do |submission|
+          next unless BizCal_9a8c2f5198.submitted?(submission)
+          values = submission['values'] || {}
+          next unless values['Calendar'].to_s == calendar['id']
+          @exceptions[values['Date'].to_s] = { 'type' =&gt; values['Type'].to_s, 'name' =&gt; values['Name'].to_s }
+        end
+      end
+
+      # [business day?, reason, exception name]
+      def info(date)
+        if date &lt; @from || date &gt; @to
+          raise Error.new('WINDOW_EXCEEDED', 'The calculation ran past the exceptions fetched for it')
+        end
+        exception = @exceptions[BizCal_9a8c2f5198.fmt(date)]
+        case exception &amp;&amp; exception['type']
+        when 'Working Day Override' then return [true, 'override', exception['name']]
+        when 'Holiday' then return [false, 'holiday', exception['name']]
+        when 'Closure' then return [false, 'closure', exception['name']]
+        end
+        return [true, 'working_day', nil] if @working.include?(date.wday)
+        [false, [0, 6].include?(date.wday) ? 'weekend' : 'non_working_day', nil]
+      end
+
+      def business_day?(date)
+        info(date)[0]
+      end
+
+      def step!
+        @steps += 1
+        raise Error.new('ITERATION_LIMIT', "The calculation exceeded #{MAX_STEPS} days") if @steps &gt; MAX_STEPS
+      end
+
+      # The first business day strictly after (1) or before (-1) the date.
+      def walk(date, direction)
+        loop do
+          date += direction
+          step!
+          return date if business_day?(date)
+        end
+      end
+
+      # The start date is never counted.
+      def add_business_days(date, amount)
+        direction = amount &lt; 0 ? -1 : 1
+        counted = 0
+        while counted &lt; amount.abs
+          date += direction
+          step!
+          counted += 1 if business_day?(date)
+        end
+        date
+      end
+
+      def adjust(date, mode)
+        return date if mode == 'none' || business_day?(date)
+        walk(date, mode == 'next_business_day' ? 1 : -1)
+      end
+
+      # Business days after start, up to and including end; negative if end &lt; start.
+      def between(start, finish)
+        return 0 if start == finish
+        low, high, sign = start &lt; finish ? [start, finish, 1] : [finish, start, -1]
+        count = 0
+        date = low
+        while date &lt; high
+          date += 1
+          step!
+          count += 1 if business_day?(date)
+        end
+        sign * count
+      end
+
+      # --- Business hours (minutes of the day in the calendar's time zone) ---------
+
+      # [open?, reason, exception name]. Opening time is open; closing time is not.
+      def time_info(date, minute)
+        business, reason, name = info(date)
+        return [false, reason, name] unless business
+        return [false, 'before_open', name] if minute &lt; @open
+        return [false, 'after_close', name] if minute &gt;= @close
+        [true, 'open', name]
+      end
+
+      # The moment itself if business is open then, otherwise the next opening.
+      def roll_forward(date, minute)
+        return [date, [minute, @open].max] if business_day?(date) &amp;&amp; minute &lt; @close
+        [walk(date, 1), @open]
+      end
+
+      # Mirror image for counting backward: the moment itself if open, otherwise
+      # the previous closing.
+      def roll_backward(date, minute)
+        return [date, [minute, @close].min] if business_day?(date) &amp;&amp; minute &gt; @open
+        [walk(date, -1), @close]
+      end
+
+      # Adds (or subtracts) business minutes, day by day. Landing exactly on the
+      # closing time returns closing time that day rather than the next opening.
+      def add_business_minutes(date, minute, amount, backward)
+        if backward
+          date, minute = roll_backward(date, minute)
+          loop do
+            available = minute - @open
+            return [date, minute - amount] if amount &lt;= available
+            amount -= available
+            date = walk(date, -1)
+            minute = @close
+          end
+        else
+          date, minute = roll_forward(date, minute)
+          loop do
+            available = @close - minute
+            return [date, minute + amount] if amount &lt;= available
+            amount -= available
+            date = walk(date, 1)
+            minute = @open
+          end
+        end
+      end
+
+      # Working minutes between two moments; negative if finish is before start.
+      # Only the part of each business day inside working hours counts.
+      def business_minutes_between(start, finish)
+        return 0 if start == finish
+        low, high, sign = (start &lt;=&gt; finish) &lt; 0 ? [start, finish, 1] : [finish, start, -1]
+        total = 0
+        date = low[0]
+        loop do
+          if business_day?(date)
+            from = date == low[0] ? low[1] : 0
+            to = date == high[0] ? high[1] : 24 * 60
+            span = [to, @close].min - [from, @open].max
+            total += span if span &gt; 0
+          end
+          break if date &gt;= high[0]
+          date += 1
+          step!
+        end
+        sign * total
+      end
+    end
+
+    def self.calculate(plan, exceptions_raw)
+      req = plan['request']
+      calendar = plan['calendar']
+      window = plan['window']
+      calc = Calculator.new(calendar, Date.parse(window['from']), Date.parse(window['to']), submissions(exceptions_raw))
+      date = Date.parse(req['date'])
+      minute = req['minute']
+      result =
+        case req['operation']
+        when 'add_duration'
+          if req['unit'] == 'business_hours'
+            day, at = calc.add_business_minutes(date, minute, req['minutes'], backward?(req))
+            moment_result(day, at, calendar).merge('isBusinessDay' =&gt; calc.business_day?(day))
+          else
+            date_result(calc, add_duration(calc, req, date), req, calendar)
+          end
+        when 'next_business_day' then date_result(calc, calc.walk(date, 1), req, calendar)
+        when 'previous_business_day' then date_result(calc, calc.walk(date, -1), req, calendar)
+        when 'is_business_day'
+          business, reason, name = calc.info(date)
+          { 'date' =&gt; fmt(date), 'isBusinessDay' =&gt; business, 'reason' =&gt; reason, 'exceptionName' =&gt; name }
+        when 'business_days_between'
+          { 'start' =&gt; req['date'], 'end' =&gt; req['end'], 'count' =&gt; calc.between(date, Date.parse(req['end'])) }
+        when 'business_hours_between'
+          finish = [Date.parse(req['end']), req['endMinute']]
+          total = calc.business_minutes_between([date, minute], finish)
+          {
+            'start' =&gt; Tz.local_iso(date, minute, calendar['timeZone']),
+            'end' =&gt; Tz.local_iso(finish[0], finish[1], calendar['timeZone']),
+            'minutes' =&gt; total,
+            'hours' =&gt; (total / 60.0).round(2)
+          }
+        when 'is_business_time'
+          open, reason, name = calc.time_info(date, minute)
+          moment_result(date, minute, calendar).merge('isBusinessTime' =&gt; open, 'reason' =&gt; reason, 'exceptionName' =&gt; name)
+        when 'next_business_opening'
+          already_open = calc.time_info(date, minute)[0]
+          day, at = calc.roll_forward(date, minute)
+          moment_result(day, at, calendar).merge('alreadyOpen' =&gt; already_open)
+        end
+      {
+        'operation' =&gt; req['operation'],
+        'calendar' =&gt; {
+          'id' =&gt; calendar['id'],
+          'name' =&gt; calendar['name'],
+          'timeZone' =&gt; calendar['timeZone'],
+          'fallback' =&gt; calendar['fallback']
+        },
+        'result' =&gt; result,
+        'warnings' =&gt; plan['warnings']
+      }
+    end
+
+    def self.add_duration(calc, req, date)
+      amount = signed_amount(req)
+      target =
+        case req['unit']
+        when 'business_days' then calc.add_business_days(date, amount)
+        when 'calendar_days' then date + amount
+        when 'weeks' then date + (amount * 7)
+        end
+      calc.adjust(target, req['adjust'])
+    end
+
+    # A local wall-clock moment as UTC and as local time with its offset.
+    def self.moment_result(date, minute, calendar)
+      {
+        'date' =&gt; fmt(date),
+        'datetime' =&gt; Tz.utc_at(date, minute, calendar['timeZone']),
+        'datetimeLocal' =&gt; Tz.local_iso(date, minute, calendar['timeZone'])
+      }
+    end
+
+    # Business-day results are stamped with the activation hour (or Time).
+    def self.date_result(calc, date, req, calendar)
+      minute = minutes(req['time'] || calendar['activationHour'])
+      moment_result(date, minute, calendar).merge('isBusinessDay' =&gt; calc.business_day?(date))
+    end
+
+    # --- Node entry points (return JSON strings) ----------------------------------
+
+    def self.error_result(error)
+      code = error.is_a?(Error) ? error.code : 'INTERNAL_ERROR'
+      message = error.is_a?(Error) ? error.message : "#{error.class}: #{error.message}"
+      {
+        'ok' =&gt; false,
+        'httpStatus' =&gt; INPUT_ERRORS.include?(code) ? 400 : 500,
+        'error' =&gt; { 'code' =&gt; code, 'message' =&gt; message }
+      }
+    end
+
+    def self.run_plan(inputs, calendars_raw)
+      JSON.generate(plan(inputs, calendars_raw), ascii_only: true)
+    rescue Exception =&gt; e
+      JSON.generate(error_result(e), ascii_only: true)
+    end
+
+    def self.run_calculate(plan, exceptions_raw)
+      return JSON.generate(plan, ascii_only: true) unless plan['ok']
+      JSON.generate(calculate(plan, exceptions_raw).merge('ok' =&gt; true, 'httpStatus' =&gt; 200), ascii_only: true)
+    rescue Exception =&gt; e
+      JSON.generate(error_result(e), ascii_only: true)
+    end
+  end
+end
+
+# Run the calculation with the plan and the exceptions fetched for its window.
+# If the plan failed (bad input or a calendar problem), Get Exceptions never
+# ran, so the plan's error is passed straight through.
+plan = JSON.parse(@results['Plan']['output'])
+exceptions = plan['ok'] ? @results['Get Exceptions']['Submissions'] : nil
+BizCal_9a8c2f5198.run_calculate(plan, exceptions)
+%&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="then return" type="Complete" value="">system_tree_return_v1_5</task>
+                </dependents>
+            </task>
+            <task definition_id="system_tree_return_v1" id="system_tree_return_v1_5" name="Return" x="1060" y="10">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Result Date" label="Result Date" menu="" required="false" tooltip="YYYY-MM-DD result in the calendar time zone (add_duration, next/previous_business_day, next_business_opening).">&lt;%=
+  # Result Date: YYYY-MM-DD result in the calendar time zone (add_duration, next/previous_business_day, next_business_opening).
+  calculation = JSON.parse(@results['Calculate']['output'])
+  calculation.dig('result', 'date').to_s
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Result Datetime" label="Result Datetime" menu="" required="false" tooltip="The result as ISO 8601 UTC. Business-day results are stamped at the activation hour.">&lt;%=
+  # Result Datetime: The result as ISO 8601 UTC. Business-day results are stamped at the activation hour.
+  calculation = JSON.parse(@results['Calculate']['output'])
+  calculation.dig('result', 'datetime').to_s
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Result Datetime Local" label="Result Datetime Local" menu="" required="false" tooltip="The same moment in the calendar time zone with its offset, e.g. 2026-11-23T13:00:00-06:00.">&lt;%=
+  # Result Datetime Local: The same moment in the calendar time zone with its offset, e.g. 2026-11-23T13:00:00-06:00.
+  calculation = JSON.parse(@results['Calculate']['output'])
+  calculation.dig('result', 'datetimeLocal').to_s
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Is Business Day" label="Is Business Day" menu="" required="false" tooltip="true or false.">&lt;%=
+  # Is Business Day: true or false.
+  calculation = JSON.parse(@results['Calculate']['output'])
+  calculation.dig('result', 'isBusinessDay').to_s
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Is Business Time" label="Is Business Time" menu="" required="false" tooltip="is_business_time only: true when the moment is inside working hours on a business day.">&lt;%=
+  # Is Business Time: is_business_time only: true when the moment is inside working hours on a business day.
+  calculation = JSON.parse(@results['Calculate']['output'])
+  calculation.dig('result', 'isBusinessTime').to_s
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Reason" label="Reason" menu="" required="false" tooltip="is_business_day / is_business_time: working_day, open, before_open, after_close, weekend, non_working_day, holiday, closure or override.">&lt;%=
+  # Reason: is_business_day / is_business_time: working_day, open, before_open, after_close, weekend, non_working_day, holiday, closure or override.
+  calculation = JSON.parse(@results['Calculate']['output'])
+  calculation.dig('result', 'reason').to_s
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Already Open" label="Already Open" menu="" required="false" tooltip="next_business_opening only: true when the given moment was already inside working hours.">&lt;%=
+  # Already Open: next_business_opening only: true when the given moment was already inside working hours.
+  calculation = JSON.parse(@results['Calculate']['output'])
+  calculation.dig('result', 'alreadyOpen').to_s
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Count" label="Count" menu="" required="false" tooltip="business_days_between only: business days after Start Date up to and including End Date.">&lt;%=
+  # Count: business_days_between only: business days after Start Date up to and including End Date.
+  calculation = JSON.parse(@results['Calculate']['output'])
+  calculation.dig('result', 'count').to_s
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Minutes" label="Minutes" menu="" required="false" tooltip="business_hours_between only: working minutes between the two moments (negative if End is before Start).">&lt;%=
+  # Minutes: business_hours_between only: working minutes between the two moments (negative if End is before Start).
+  calculation = JSON.parse(@results['Calculate']['output'])
+  calculation.dig('result', 'minutes').to_s
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Hours" label="Hours" menu="" required="false" tooltip="business_hours_between only: the same as decimal hours, rounded to 2 places.">&lt;%=
+  # Hours: business_hours_between only: the same as decimal hours, rounded to 2 places.
+  calculation = JSON.parse(@results['Calculate']['output'])
+  calculation.dig('result', 'hours').to_s
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Calendar" label="Calendar" menu="" required="false" tooltip="ID of the calendar used.">&lt;%=
+  # Calendar: ID of the calendar used.
+  calculation = JSON.parse(@results['Calculate']['output'])
+  calculation.dig('calendar', 'id').to_s
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Calendar Name" label="Calendar Name" menu="" required="false" tooltip="Name of the calendar used.">&lt;%=
+  # Calendar Name: Name of the calendar used.
+  calculation = JSON.parse(@results['Calculate']['output'])
+  calculation.dig('calendar', 'name').to_s
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Calendar Fallback" label="Calendar Fallback" menu="" required="false" tooltip="true when the requested calendar was not found and the default was used.">&lt;%=
+  # Calendar Fallback: true when the requested calendar was not found and the default was used.
+  calculation = JSON.parse(@results['Calculate']['output'])
+  calculation.dig('calendar', 'fallback').to_s
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Warnings" label="Warnings" menu="" required="false" tooltip="JSON array of {code, message}.">&lt;%=
+  # Warnings: JSON array of {code, message}.
+  calculation = JSON.parse(@results['Calculate']['output'])
+  JSON.generate(calculation['warnings'] || [])
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Error Code" label="Error Code" menu="" required="false" tooltip="Blank on success.">&lt;%=
+  # Error Code: Blank on success.
+  calculation = JSON.parse(@results['Calculate']['output'])
+  calculation.dig('error', 'code').to_s
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Error Message" label="Error Message" menu="" required="false" tooltip="Blank on success.">&lt;%=
+  # Error Message: Blank on success.
+  calculation = JSON.parse(@results['Calculate']['output'])
+  calculation.dig('error', 'message').to_s
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="HTTP Status" label="HTTP Status" menu="" required="false" tooltip="200, 400 (bad input) or 500 (configuration or engine problem).">&lt;%=
+  # HTTP Status: 200, 400 (bad input) or 500 (configuration or engine problem).
+  calculation = JSON.parse(@results['Calculate']['output'])
+  calculation['httpStatus'].to_s
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Result JSON" label="Result JSON" menu="" required="false" tooltip="The full result as JSON.">&lt;%=
+  # Result JSON: The full result as JSON.
+  calculation = JSON.parse(@results['Calculate']['output'])
+  # Drop the internal ok/httpStatus flags; callers get operation, calendar,
+  # result and warnings (or error).
+  JSON.generate(calculation.reject { |key, _| %w[ok httpStatus].include?(key) }, ascii_only: true)
+%&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+        </request>
+    </taskTree>
+</tree>

@@ -1,0 +1,408 @@
+{
+  "anonymous": false,
+  "attributes": [],
+  "bridgedResources": [],
+  "categorizations": [],
+  "customHeadContent": null,
+  "description": "Business calendars used to calculate business days, due dates and activation dates. Holidays, closures and working-day overrides are kept in Business Calendar Exception.",
+  "indexDefinitions": [
+    {
+      "name": "closedBy",
+      "parts": [
+        "closedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "createdBy",
+      "parts": [
+        "createdBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "handle",
+      "parts": [
+        "handle"
+      ],
+      "unique": false
+    },
+    {
+      "name": "submittedBy",
+      "parts": [
+        "submittedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "updatedBy",
+      "parts": [
+        "updatedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Is Default]",
+      "parts": [
+        "values[Is Default]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Name]:UNIQUE",
+      "parts": [
+        "values[Name]"
+      ],
+      "unique": true
+    },
+    {
+      "name": "values[Work End]",
+      "parts": [
+        "values[Work End]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Work Start]",
+      "parts": [
+        "values[Work Start]"
+      ],
+      "unique": false
+    }
+  ],
+  "integrations": [],
+  "name": "Business Calendar",
+  "notes": null,
+  "pages": [
+    {
+      "advanceCondition": null,
+      "displayCondition": null,
+      "displayPage": null,
+      "elements": [
+        {
+          "type": "field",
+          "renderType": "text",
+          "name": "Name",
+          "label": "Name",
+          "key": "bc0a1f3e9d2b4c51a7e8f6d5c4b3a201",
+          "dataType": "string",
+          "required": true,
+          "enabled": true,
+          "visible": true,
+          "rows": 1,
+          "defaultDataSource": "none",
+          "defaultValue": null,
+          "defaultResourceName": null,
+          "requiredMessage": null,
+          "omitWhenHidden": null,
+          "pattern": null,
+          "constraints": [],
+          "events": [],
+          "renderAttributes": {}
+        },
+        {
+          "type": "field",
+          "renderType": "dropdown",
+          "name": "Time Zone",
+          "label": "Time Zone",
+          "key": "bc0a1f3e9d2b4c51a7e8f6d5c4b3a202",
+          "dataType": "string",
+          "required": true,
+          "enabled": true,
+          "visible": true,
+          "defaultDataSource": "none",
+          "defaultValue": null,
+          "defaultResourceName": null,
+          "requiredMessage": null,
+          "omitWhenHidden": null,
+          "pattern": null,
+          "constraints": [],
+          "events": [],
+          "renderAttributes": {},
+          "choicesDataSource": "custom",
+          "choicesResourceName": null,
+          "choicesResourceProperty": null,
+          "choicesRunIf": null,
+          "choices": [
+            {
+              "label": "America/New_York (Eastern)",
+              "value": "America/New_York"
+            },
+            {
+              "label": "America/Chicago (Central)",
+              "value": "America/Chicago"
+            },
+            {
+              "label": "America/Denver (Mountain)",
+              "value": "America/Denver"
+            },
+            {
+              "label": "America/Phoenix (Arizona)",
+              "value": "America/Phoenix"
+            },
+            {
+              "label": "America/Los_Angeles (Pacific)",
+              "value": "America/Los_Angeles"
+            },
+            {
+              "label": "America/Anchorage (Alaska)",
+              "value": "America/Anchorage"
+            },
+            {
+              "label": "Pacific/Honolulu (Hawaii)",
+              "value": "Pacific/Honolulu"
+            },
+            {
+              "label": "America/Toronto",
+              "value": "America/Toronto"
+            },
+            {
+              "label": "America/Mexico_City",
+              "value": "America/Mexico_City"
+            },
+            {
+              "label": "Europe/London",
+              "value": "Europe/London"
+            },
+            {
+              "label": "Europe/Dublin",
+              "value": "Europe/Dublin"
+            },
+            {
+              "label": "Europe/Paris",
+              "value": "Europe/Paris"
+            },
+            {
+              "label": "Europe/Berlin",
+              "value": "Europe/Berlin"
+            },
+            {
+              "label": "Asia/Tokyo",
+              "value": "Asia/Tokyo"
+            },
+            {
+              "label": "Australia/Sydney",
+              "value": "Australia/Sydney"
+            },
+            {
+              "label": "UTC",
+              "value": "UTC"
+            }
+          ]
+        },
+        {
+          "type": "field",
+          "renderType": "checkbox",
+          "name": "Working Days",
+          "label": "Working Days",
+          "key": "bc0a1f3e9d2b4c51a7e8f6d5c4b3a203",
+          "dataType": "json",
+          "required": true,
+          "enabled": true,
+          "visible": true,
+          "defaultDataSource": "none",
+          "defaultValue": null,
+          "defaultResourceName": null,
+          "requiredMessage": null,
+          "omitWhenHidden": null,
+          "pattern": null,
+          "constraints": [],
+          "events": [],
+          "renderAttributes": {},
+          "choicesDataSource": "custom",
+          "choicesResourceName": null,
+          "choicesResourceProperty": null,
+          "choicesRunIf": null,
+          "choices": [
+            {
+              "label": "Monday",
+              "value": "Monday"
+            },
+            {
+              "label": "Tuesday",
+              "value": "Tuesday"
+            },
+            {
+              "label": "Wednesday",
+              "value": "Wednesday"
+            },
+            {
+              "label": "Thursday",
+              "value": "Thursday"
+            },
+            {
+              "label": "Friday",
+              "value": "Friday"
+            },
+            {
+              "label": "Saturday",
+              "value": "Saturday"
+            },
+            {
+              "label": "Sunday",
+              "value": "Sunday"
+            }
+          ]
+        },
+        {
+          "type": "field",
+          "renderType": "text",
+          "name": "Default Activation Hour",
+          "label": "Default Activation Hour (HH:MM, 24-hour, calendar time zone)",
+          "key": "bc0a1f3e9d2b4c51a7e8f6d5c4b3a204",
+          "dataType": "string",
+          "required": true,
+          "enabled": true,
+          "visible": true,
+          "rows": 1,
+          "defaultDataSource": "none",
+          "defaultValue": "08:00",
+          "defaultResourceName": null,
+          "requiredMessage": null,
+          "omitWhenHidden": null,
+          "pattern": {
+            "regex": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "message": "Use 24-hour HH:MM, for example 08:00"
+          },
+          "constraints": [],
+          "events": [],
+          "renderAttributes": {}
+        },
+        {
+          "type": "field",
+          "renderType": "text",
+          "name": "Work Start",
+          "label": "Work Start (HH:MM, 24-hour, calendar time zone)",
+          "key": "bc0a1f3e9d2b4c51a7e8f6d5c4b3a207",
+          "dataType": "string",
+          "required": true,
+          "enabled": true,
+          "visible": true,
+          "rows": 1,
+          "defaultDataSource": "none",
+          "defaultValue": "08:00",
+          "defaultResourceName": null,
+          "requiredMessage": null,
+          "omitWhenHidden": null,
+          "pattern": {
+            "regex": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "message": "Use 24-hour HH:MM, for example 08:00"
+          },
+          "constraints": [],
+          "events": [],
+          "renderAttributes": {}
+        },
+        {
+          "type": "field",
+          "renderType": "text",
+          "name": "Work End",
+          "label": "Work End (HH:MM, 24-hour, calendar time zone; after Work Start)",
+          "key": "bc0a1f3e9d2b4c51a7e8f6d5c4b3a208",
+          "dataType": "string",
+          "required": true,
+          "enabled": true,
+          "visible": true,
+          "rows": 1,
+          "defaultDataSource": "none",
+          "defaultValue": "17:00",
+          "defaultResourceName": null,
+          "requiredMessage": null,
+          "omitWhenHidden": null,
+          "pattern": {
+            "regex": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "message": "Use 24-hour HH:MM, for example 17:00"
+          },
+          "constraints": [],
+          "events": [],
+          "renderAttributes": {}
+        },
+        {
+          "type": "field",
+          "renderType": "radio",
+          "name": "Is Default",
+          "label": "Is Default",
+          "key": "bc0a1f3e9d2b4c51a7e8f6d5c4b3a205",
+          "dataType": "string",
+          "required": true,
+          "enabled": true,
+          "visible": true,
+          "defaultDataSource": "none",
+          "defaultValue": "No",
+          "defaultResourceName": null,
+          "requiredMessage": null,
+          "omitWhenHidden": null,
+          "pattern": null,
+          "constraints": [],
+          "events": [],
+          "renderAttributes": {},
+          "choicesDataSource": "custom",
+          "choicesResourceName": null,
+          "choicesResourceProperty": null,
+          "choicesRunIf": null,
+          "choices": [
+            {
+              "label": "Yes",
+              "value": "Yes"
+            },
+            {
+              "label": "No",
+              "value": "No"
+            }
+          ]
+        },
+        {
+          "type": "field",
+          "renderType": "text",
+          "name": "Description",
+          "label": "Description",
+          "key": "bc0a1f3e9d2b4c51a7e8f6d5c4b3a206",
+          "dataType": "string",
+          "required": false,
+          "enabled": true,
+          "visible": true,
+          "rows": 3,
+          "defaultDataSource": "none",
+          "defaultValue": null,
+          "defaultResourceName": null,
+          "requiredMessage": null,
+          "omitWhenHidden": null,
+          "pattern": null,
+          "constraints": [],
+          "events": [],
+          "renderAttributes": {}
+        },
+        {
+          "type": "button",
+          "renderType": "submit-page",
+          "name": "Submit Button",
+          "label": "Submit",
+          "enabled": true,
+          "visible": true,
+          "renderAttributes": {}
+        }
+      ],
+      "events": [],
+      "name": "Page 1",
+      "renderType": "submittable",
+      "type": "page"
+    }
+  ],
+  "securityPolicies": [
+    {
+      "endpoint": "Display",
+      "name": "Business Calendar Admins"
+    },
+    {
+      "endpoint": "Modification",
+      "name": "Business Calendar Admins"
+    },
+    {
+      "endpoint": "Submission Access",
+      "name": "Business Calendar Admins"
+    }
+  ],
+  "slug": "business-calendar",
+  "status": "Active",
+  "submissionLabelExpression": "${values('Name')}",
+  "type": "Datastore"
+}

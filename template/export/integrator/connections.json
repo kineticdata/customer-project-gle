@@ -673,6 +673,46 @@
         "documentationLink": "",
         "connectionId": "1415539c-bb98-48bb-ad33-11be25189ad0",
         "notes": ""
+      },
+      {
+        "id": "94e330c5-3ea9-42c3-b232-3c8bb25dabe2",
+        "name": "Search Submissions",
+        "config": {
+          "path": "/kapps/{{Kapp Slug}}/forms/{{Form Slug}}/submissions",
+          "params": {
+            "include": "details,values",
+            "limit": "{{#Limit}}{{Limit}}{{/Limit}}",
+            "orderBy": "{{#Order By}}{{{Order By}}}{{/Order By}}",
+            "pageToken": "{{#Page Token}}{{{Page Token}}}{{/Page Token}}",
+            "q": "{{#Query}}{{{Query}}}{{/Query}}"
+          },
+          "body": {
+            "form": {},
+            "bodyType": "www_form_urlencoded"
+          },
+          "headers": {
+            "content-type": "application/json"
+          },
+          "configType": "http",
+          "method": "GET",
+          "includeEmptyParams": false,
+          "followRedirect": false,
+          "streamResponse": false
+        },
+        "outputs": {
+          "Error": {
+            "value": "body['error']"
+          },
+          "Next Page Token": {
+            "value": "body['nextPageToken']"
+          },
+          "Submissions": {
+            "value": "body['submissions'] || []"
+          }
+        },
+        "documentationLink": "",
+        "connectionId": "1415539c-bb98-48bb-ad33-11be25189ad0",
+        "notes": "Indexed KQL search of a form's submissions. Used by the Business Calendar routines. Query, Order By, Limit and Page Token are optional."
       }
     ]
   },

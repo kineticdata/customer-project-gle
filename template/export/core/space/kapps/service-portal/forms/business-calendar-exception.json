@@ -1,0 +1,234 @@
+{
+  "anonymous": false,
+  "attributes": [],
+  "bridgedResources": [],
+  "categorizations": [],
+  "customHeadContent": null,
+  "description": "Holidays, closures and working-day overrides for a Business Calendar. One exception per calendar per date.",
+  "indexDefinitions": [
+    {
+      "name": "closedBy",
+      "parts": [
+        "closedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "createdBy",
+      "parts": [
+        "createdBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "handle",
+      "parts": [
+        "handle"
+      ],
+      "unique": false
+    },
+    {
+      "name": "submittedBy",
+      "parts": [
+        "submittedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "updatedBy",
+      "parts": [
+        "updatedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Calendar],values[Date]:UNIQUE",
+      "parts": [
+        "values[Calendar]",
+        "values[Date]"
+      ],
+      "unique": true
+    }
+  ],
+  "integrations": [
+    {
+      "connectionId": "1415539c-bb98-48bb-ad33-11be25189ad0",
+      "inputMappings": {
+        "Kapp Slug": "service-portal",
+        "Form Slug": "business-calendar"
+      },
+      "name": "Business Calendars",
+      "operationId": "cb8cbf5b-a370-4318-b3da-3d254501a4f5"
+    }
+  ],
+  "name": "Business Calendar Exception",
+  "notes": null,
+  "pages": [
+    {
+      "advanceCondition": null,
+      "displayCondition": null,
+      "displayPage": null,
+      "elements": [
+        {
+          "type": "field",
+          "renderType": "dropdown",
+          "name": "Calendar",
+          "label": "Calendar",
+          "key": "bce1a2b3c4d5e6f708192a3b4c5d6e01",
+          "dataType": "string",
+          "required": true,
+          "enabled": true,
+          "visible": true,
+          "defaultDataSource": "none",
+          "defaultValue": null,
+          "defaultResourceName": null,
+          "requiredMessage": null,
+          "omitWhenHidden": null,
+          "pattern": null,
+          "constraints": [],
+          "events": [],
+          "renderAttributes": {},
+          "choicesDataSource": "integration",
+          "choicesResourceName": "Business Calendars",
+          "choicesResourceProperty": "Data",
+          "choicesRunIf": null,
+          "choices": {
+            "label": "${integration('Label')}",
+            "value": "${integration('Submission Id')}"
+          }
+        },
+        {
+          "type": "field",
+          "renderType": "date",
+          "name": "Date",
+          "label": "Date",
+          "key": "bce1a2b3c4d5e6f708192a3b4c5d6e02",
+          "dataType": "string",
+          "required": true,
+          "enabled": true,
+          "visible": true,
+          "defaultDataSource": "none",
+          "defaultValue": null,
+          "defaultResourceName": null,
+          "requiredMessage": null,
+          "omitWhenHidden": null,
+          "pattern": null,
+          "constraints": [],
+          "events": [],
+          "renderAttributes": {}
+        },
+        {
+          "type": "field",
+          "renderType": "text",
+          "name": "Name",
+          "label": "Name",
+          "key": "bce1a2b3c4d5e6f708192a3b4c5d6e03",
+          "dataType": "string",
+          "required": true,
+          "enabled": true,
+          "visible": true,
+          "rows": 1,
+          "defaultDataSource": "none",
+          "defaultValue": null,
+          "defaultResourceName": null,
+          "requiredMessage": null,
+          "omitWhenHidden": null,
+          "pattern": null,
+          "constraints": [],
+          "events": [],
+          "renderAttributes": {}
+        },
+        {
+          "type": "field",
+          "renderType": "radio",
+          "name": "Type",
+          "label": "Type",
+          "key": "bce1a2b3c4d5e6f708192a3b4c5d6e04",
+          "dataType": "string",
+          "required": true,
+          "enabled": true,
+          "visible": true,
+          "defaultDataSource": "none",
+          "defaultValue": "Holiday",
+          "defaultResourceName": null,
+          "requiredMessage": null,
+          "omitWhenHidden": null,
+          "pattern": null,
+          "constraints": [],
+          "events": [],
+          "renderAttributes": {},
+          "choicesDataSource": "custom",
+          "choicesResourceName": null,
+          "choicesResourceProperty": null,
+          "choicesRunIf": null,
+          "choices": [
+            {
+              "label": "Holiday",
+              "value": "Holiday"
+            },
+            {
+              "label": "Closure",
+              "value": "Closure"
+            },
+            {
+              "label": "Working Day Override",
+              "value": "Working Day Override"
+            }
+          ]
+        },
+        {
+          "type": "field",
+          "renderType": "text",
+          "name": "Notes",
+          "label": "Notes",
+          "key": "bce1a2b3c4d5e6f708192a3b4c5d6e05",
+          "dataType": "string",
+          "required": false,
+          "enabled": true,
+          "visible": true,
+          "rows": 3,
+          "defaultDataSource": "none",
+          "defaultValue": null,
+          "defaultResourceName": null,
+          "requiredMessage": null,
+          "omitWhenHidden": null,
+          "pattern": null,
+          "constraints": [],
+          "events": [],
+          "renderAttributes": {}
+        },
+        {
+          "type": "button",
+          "renderType": "submit-page",
+          "name": "Submit Button",
+          "label": "Submit",
+          "enabled": true,
+          "visible": true,
+          "renderAttributes": {}
+        }
+      ],
+      "events": [],
+      "name": "Page 1",
+      "renderType": "submittable",
+      "type": "page"
+    }
+  ],
+  "securityPolicies": [
+    {
+      "endpoint": "Display",
+      "name": "Business Calendar Admins"
+    },
+    {
+      "endpoint": "Modification",
+      "name": "Business Calendar Admins"
+    },
+    {
+      "endpoint": "Submission Access",
+      "name": "Business Calendar Admins"
+    }
+  ],
+  "slug": "business-calendar-exception",
+  "status": "Active",
+  "submissionLabelExpression": "${values('Date')} - ${values('Name')} [${values('Type')}]",
+  "type": "Datastore"
+}

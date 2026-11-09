@@ -1,0 +1,91 @@
+<tree schema_version="1.0">
+    <sourceName>-</sourceName>
+    <sourceGroup>-</sourceGroup>
+    <definitionId>routine_business_calendar_is_within_business_hours_v1</definitionId>
+    <type>Global Routine</type>
+    <status>Active</status>
+    <taskTree builder_version="" schema_version="1.0" version="">
+        <name>Business Calendar Is Within Business Hours</name>
+        <author></author>
+        <notes></notes>
+        <lastID>2</lastID>
+        <taskDefinition id="routine_business_calendar_is_within_business_hours_v1" name="Business Calendar Is Within Business Hours" schema_version="1.0" version="1">
+            <visible>false</visible>
+            <deferrable>true</deferrable>
+            <parameters>
+                <parameter id="Calendar" label="Calendar" required="false" tooltip="Calendar ID; blank uses the default."></parameter>
+                <parameter id="At" label="At" required="true" tooltip="YYYY-MM-DD or ISO 8601 datetime with an offset. A date alone is checked at that day's opening."></parameter>
+            </parameters>
+            <handler name="system_tree_call" version="1"></handler>
+            <results format="xml">
+                <result name="Is Business Time" tooltip="is_business_time only: true when the moment is inside working hours on a business day."></result>
+                <result name="Reason" tooltip="is_business_day / is_business_time: working_day, open, before_open, after_close, weekend, non_working_day, holiday, closure or override."></result>
+                <result name="Result Datetime Local" tooltip="The same moment in the calendar time zone with its offset, e.g. 2026-11-23T13:00:00-06:00."></result>
+                <result name="Calendar" tooltip="ID of the calendar used."></result>
+                <result name="Calendar Name" tooltip="Name of the calendar used."></result>
+                <result name="Calendar Fallback" tooltip="true when the requested calendar was not found and the default was used."></result>
+                <result name="Warnings" tooltip="JSON array of {code, message}."></result>
+                <result name="Error Code" tooltip="Blank on success."></result>
+                <result name="Error Message" tooltip="Blank on success."></result>
+                <result name="Result JSON" tooltip="The full result as JSON."></result>
+            </results>
+        </taskDefinition>
+        <request>
+            <task definition_id="system_start_v1" id="start" name="Start" x="10" y="10">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>false</visible>
+                <parameters></parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="calculate" type="Complete" value="">routine_business_calendar_calculate_v1_1</task>
+                </dependents>
+            </task>
+            <task definition_id="routine_business_calendar_calculate_v1" id="routine_business_calendar_calculate_v1_1" name="Calculate" x="250" y="10">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>true</defers>
+                <deferrable>true</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Operation" label="Operation" menu="" required="true" tooltip="add_duration, is_business_day, next_business_day, previous_business_day, business_days_between, business_hours_between, is_business_time or next_business_opening">is_business_time</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Calendar" label="Calendar" menu="" required="false" tooltip="Business calendar submission ID. Blank uses the default calendar; an unknown ID uses the default with a warning.">&lt;%= @inputs['Calendar'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Date" label="Date" menu="" required="false" tooltip="YYYY-MM-DD, or an ISO 8601 datetime with an offset (converted to the calendar time zone). The from date, start or moment. In business-hours operations a date alone means that day's opening.">&lt;%= @inputs['At'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="End Date" label="End Date" menu="" required="false" tooltip="business_days_between / business_hours_between only: YYYY-MM-DD or ISO 8601 datetime."></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Amount" label="Amount" menu="" required="false" tooltip="add_duration only: negative reverses the direction. Whole numbers, except business_hours, which allows decimals (1.5 = 90 minutes)."></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Unit" label="Unit" menu="" required="false" tooltip="add_duration only: business_days, calendar_days, weeks or business_hours."></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Direction" label="Direction" menu="" required="false" tooltip="add_duration only: after (default) or before."></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Adjust" label="Adjust" menu="" required="false" tooltip="add_duration only: none (default), previous_business_day or next_business_day. Ignored for business_hours."></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Time" label="Time" menu="" required="false" tooltip="Optional HH:MM overriding the calendar Default Activation Hour on business-day results."></parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="then return" type="Complete" value="">system_tree_return_v1_2</task>
+                </dependents>
+            </task>
+            <task definition_id="system_tree_return_v1" id="system_tree_return_v1_2" name="Return" x="500" y="10">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Is Business Time" label="Is Business Time" menu="" required="false" tooltip="is_business_time only: true when the moment is inside working hours on a business day.">&lt;%= @results['Calculate']['Is Business Time'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Reason" label="Reason" menu="" required="false" tooltip="is_business_day / is_business_time: working_day, open, before_open, after_close, weekend, non_working_day, holiday, closure or override.">&lt;%= @results['Calculate']['Reason'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Result Datetime Local" label="Result Datetime Local" menu="" required="false" tooltip="The same moment in the calendar time zone with its offset, e.g. 2026-11-23T13:00:00-06:00.">&lt;%= @results['Calculate']['Result Datetime Local'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Calendar" label="Calendar" menu="" required="false" tooltip="ID of the calendar used.">&lt;%= @results['Calculate']['Calendar'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Calendar Name" label="Calendar Name" menu="" required="false" tooltip="Name of the calendar used.">&lt;%= @results['Calculate']['Calendar Name'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Calendar Fallback" label="Calendar Fallback" menu="" required="false" tooltip="true when the requested calendar was not found and the default was used.">&lt;%= @results['Calculate']['Calendar Fallback'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Warnings" label="Warnings" menu="" required="false" tooltip="JSON array of {code, message}.">&lt;%= @results['Calculate']['Warnings'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Error Code" label="Error Code" menu="" required="false" tooltip="Blank on success.">&lt;%= @results['Calculate']['Error Code'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Error Message" label="Error Message" menu="" required="false" tooltip="Blank on success.">&lt;%= @results['Calculate']['Error Message'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Result JSON" label="Result JSON" menu="" required="false" tooltip="The full result as JSON.">&lt;%= @results['Calculate']['Result JSON'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+        </request>
+    </taskTree>
+</tree>
