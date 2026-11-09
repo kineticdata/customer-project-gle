@@ -1,0 +1,126 @@
+<tree schema_version="1.0">
+    <sourceName>Kinetic Request CE</sourceName>
+    <sourceGroup>WebApis > service-portal</sourceGroup>
+    <type>Tree</type>
+    <status>Active</status>
+    <taskTree builder_version="" schema_version="1.0" version="">
+        <name>business-calendar-batch</name>
+        <author></author>
+        <notes></notes>
+        <lastID>4</lastID>
+        <request>
+            <task definition_id="system_start_v1" id="start" name="Start" x="10" y="10">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>false</visible>
+                <parameters></parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="parse body" type="Complete" value="">utilities_echo_v1_1</task>
+                </dependents>
+            </task>
+            <task definition_id="utilities_echo_v1" id="utilities_echo_v1_1" name="Parse Request" x="262" y="13">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="input" label="Input" menu="" required="true" tooltip="">&lt;%=
+  # Read the JSON body, {"requests": [...]}, and pass the array on as the
+  # routine's Requests input. A body that isn't JSON or has no requests
+  # array is answered with 400 by the "Body invalid?" branch.
+  # (@request['Body'] is read with a rescue because a missing key raises.)
+  body = (@request['Body'] rescue nil).to_s
+  requests =
+    begin
+      parsed = JSON.parse(body)
+      parsed.is_a?(Hash) ? parsed['requests'] : nil
+    rescue JSON::ParserError
+      nil
+    end
+
+  if requests.is_a?(Array)
+    JSON.generate({ 'ok' =&gt; true, 'requests' =&gt; JSON.generate(requests, ascii_only: true) }, ascii_only: true)
+  else
+    JSON.generate({ 'ok' =&gt; false, 'error' =&gt; { 'code' =&gt; 'INVALID_ARGUMENT',
+                                                'message' =&gt; 'The body must be JSON: {"requests": [ ... ]}' } })
+  end
+%&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="Body OK?" type="Complete" value="JSON.parse(@results['Parse Request']['output'])['ok'] == true">routine_business_calendar_add_duration_batch_v1_2</task>
+                    <task label="Body invalid?" type="Complete" value="!(JSON.parse(@results['Parse Request']['output'])['ok'] == true)">system_tree_return_v1_4</task>
+                </dependents>
+            </task>
+            <task definition_id="routine_business_calendar_add_duration_batch_v1" id="routine_business_calendar_add_duration_batch_v1_2" name="Calculate" x="662" y="21">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>true</defers>
+                <deferrable>true</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Requests" label="Requests" menu="" required="true" tooltip="JSON array of {id, calendar, fromDate, amount, unit, direction, adjust, time, dependsOn}. calendar is a calendar Name or ID (blank uses the default). fromDate is YYYY-MM-DD or an ISO 8601 datetime with an offset. unit is business_days, calendar_days, weeks or business_hours; direction after or before; adjust none, previous_business_day or next_business_day; time HH:MM or null. dependsOn is the id of another request whose result datetime is the From Date when fromDate is blank. At most 1000 requests.">&lt;%=
+  # The requests array from the body, as JSON
+  JSON.parse(@results['Parse Request']['output'])['requests']
+%&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="then return" type="Complete" value="">system_tree_return_v1_3</task>
+                </dependents>
+            </task>
+            <task definition_id="system_tree_return_v1" id="system_tree_return_v1_3" name="Return" x="1027" y="18">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="content" label="Content" menu="" required="false" tooltip="">&lt;%=
+  # {"dates": {...}, "errorCount": n}, or {"error": {code, message}} when
+  # the batch as a whole failed.
+  calculation = @results['Calculate']
+  if calculation['Error Code'].to_s.empty?
+    JSON.generate({ 'dates' =&gt; JSON.parse(calculation['Dates']),
+                    'errorCount' =&gt; calculation['Error Count'].to_i }, ascii_only: true)
+  else
+    JSON.generate({ 'error' =&gt; { 'code' =&gt; calculation['Error Code'],
+                                 'message' =&gt; calculation['Error Message'] } }, ascii_only: true)
+  end
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="content_type" label="Content Type" menu="" required="false" tooltip="">application/json</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="headers_json" label="Headers (JSON)" menu="" required="false" tooltip="">{"Cache-Control":"no-store"}</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="response_code" label="Response Code" menu="" required="false" tooltip="">&lt;%=
+  # 200, or 400 when the batch as a whole was rejected (each request's
+  # own errors are inside dates)
+  @results['Calculate']['Error Code'].to_s.empty? ? '200' : '400'
+%&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="system_tree_return_v1" id="system_tree_return_v1_4" name="Return Bad Request" x="662" y="171">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="content" label="Content" menu="" required="false" tooltip="">&lt;%=
+  # {"error": {code, message}} from Parse Request
+  JSON.generate({ 'error' =&gt; JSON.parse(@results['Parse Request']['output'])['error'] }, ascii_only: true)
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="content_type" label="Content Type" menu="" required="false" tooltip="">application/json</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="headers_json" label="Headers (JSON)" menu="" required="false" tooltip="">{"Cache-Control":"no-store"}</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="response_code" label="Response Code" menu="" required="false" tooltip="">400</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+        </request>
+    </taskTree>
+</tree>

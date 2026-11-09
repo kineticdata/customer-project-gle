@@ -17,7 +17,9 @@ Nothing here is onboarding-specific.
 | Integrator operation | Search Submissions, on the Kinetic Platform connection |
 | Core routine | Business Calendar Calculate (`routine_business_calendar_calculate_v1`) |
 | Wrapper routines | Business Calendar Add Duration, Is Business Day, Next Business Day, Previous Business Day, Business Days Between, Business Hours Between, Is Within Business Hours, Next Business Opening |
+| Batch routine | Business Calendar Add Duration Batch (`routine_business_calendar_add_duration_batch_v1`) |
 | WebAPI | `GET /app/kapps/service-portal/webApis/business-calendar?timeout=10` (Authenticated Users) |
+| Batch WebAPI | `POST /app/kapps/service-portal/webApis/business-calendar-batch?timeout=25` (Authenticated Users) |
 | Portal helper | `businessCalendar(kappSlug, params)` in `portal/src/helpers/api.js` |
 
 HR maintains calendars and exceptions under Settings > Datastore. Each
@@ -42,6 +44,43 @@ The core routine:
 3. Fetches that range's exceptions in a single indexed search
    (`values[Calendar],values[Date]`).
 4. Calculates the result.
+
+## Batch
+
+`Business Calendar Add Duration Batch` runs many add_duration calculations in
+one routine run. It searches the calendars once and the exceptions once (one
+`values[Calendar] IN (...) AND values[Date] BETWEEN (...)` search covering every
+request), then calculates every date in one node. `batch.rb` holds the batch
+logic; each date still goes through `BizCal.plan` and `BizCal.calculate`, so it
+matches Business Calendar Add Duration for the same inputs.
+
+- **Input `Requests`:** a JSON array (at most 1000) of
+  `{id, calendar, fromDate, amount, unit, direction, adjust, time, dependsOn}`.
+  - `calendar` is a calendar Name (any letter case) or ID. Blank uses the
+    default. An unknown calendar is an error for that request only; Add
+    Duration would fall back to the default instead.
+  - `fromDate`, `amount`, `unit`, `direction`, `adjust` and `time` mean what
+    the Add Duration inputs mean.
+  - `dependsOn` is another request's id. When `fromDate` is blank, that
+    request's result datetime is the From Date (a warning date counted back
+    from a due date). Chains work in any order.
+- **Output `Dates`:** a JSON object keyed by request id, each value
+  `{date, datetime}` (datetime in UTC) or `{error}`. Request errors read
+  `CODE: message` for calendar errors, or one of: `Unknown calendar "X"`,
+  `The request has no from date`, `Depends on X, which failed`,
+  `Depends on X, which was not requested`,
+  `Depends on X, but the dependencies form a loop`,
+  `More than one request has this id`. Requests without an id are skipped.
+- **`Error Count`** counts the requests in `Dates` with an error.
+  **`Error Code`** / **`Error Message`** are set only when the batch as a whole
+  fails (Requests isn't a JSON array of objects, more than 1000 requests, or
+  the calendar search failed); `Dates` is then `{}` and `Error Count` is 1.
+- **WebAPI:** `POST` with body `{"requests": [...]}`. Returns 200 with
+  `{"dates": {...}, "errorCount": n}`, or 400 with
+  `{"error": {"code", "message"}}` for a bad body or a batch-level error.
+
+On global-laser-enrichment-dev (2026-10-22) the routine took about 2 seconds for
+1000 requests, and the WebAPI answered in about 9 seconds.
 
 ## Semantics
 
@@ -154,20 +193,27 @@ returns:
 ```bash
 cd template/tooling/business-calendar
 ruby test_local.rb
+ruby test_batch_local.rb
 ruby build_trees.rb <search-submissions-operation-id> /tmp/business-calendar-build --export ../../export
 ```
 
-1. Edit `business_calendar.rb`, then run `ruby test_local.rb`. It runs every
-   case in `cases.json` locally, using TZ-based time zone stubs because MRI has
-   no `java.time`.
+1. Edit `business_calendar.rb` (or `batch.rb`), then run `ruby test_local.rb`
+   and `ruby test_batch_local.rb`. They run `cases.json` and
+   `batch_cases.json` locally, using the TZ-based time zone stubs in
+   `local_fixture.rb` because MRI has no `java.time`. `test_batch_local.rb`
+   also checks each batch result against the same request calculated on its
+   own.
 2. Rebuild with `build_trees.rb`. It writes the API payloads to the build
    directory. With `--export`, it also rewrites the routine and WebAPI tree XML
    in `template/export` exactly as the Task engine exports them.
 3. Update the routines and WebAPI tree on the platform:
    - Routines: `PUT /trees/{title}` with the new `treeJson` and current
      `versionId`.
-   - WebAPI: `POST /kapps/service-portal/webApiImport?force=true`.
-4. Re-run the cases against the platform.
+   - WebAPIs: `POST /kapps/service-portal/webApiImport?force=true`.
+4. Re-run the cases against the platform. For the batch, run
+   `batch_cases.json` as one batch routine run, run Business Calendar Add
+   Duration for every request it can also run, and compare with
+   `BatchCompare.check` in `batch_compare.rb`.
 
 The embedded module is named after a hash of the source, so a routine update
 never collides with an older version already loaded in the engine.
